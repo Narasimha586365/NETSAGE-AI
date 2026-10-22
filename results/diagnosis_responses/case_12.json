@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "PC9 intermittently loses access while another PC uses the same network.",
+    "R11 show arp output lists Internet address 192.168.100.10 bound to MAC address aaaa.bbbb.0001 on Gi0/0.",
+    "R11 show arp output lists Internet address 192.168.100.10 bound to MAC address cccc.dddd.0002 on Gi0/0."
+  ],
+  "next_command": "show arp",
+  "confidence": "High",
+  "root_cause": "A duplicate IP address conflict exists for 192.168.100.10, which is bound to multiple MAC addresses (aaaa.bbbb.0001 and cccc.dddd.0002) on interface Gi0/0.",
+  "verification": [
+    "Run show arp on R11 and confirm that IP address 192.168.100.10 maps to only a single unique MAC address.",
+    "Manually test PC9 connectivity to ensure intermittent loss of access is resolved."
+  ],
+  "fix_steps": [
+    "Verify the duplicate ARP entries for IP address 192.168.100.10 on R11 interface Gi0/0.",
+    "Identify the conflicting devices associated with MAC addresses aaaa.bbbb.0001 and cccc.dddd.0002.",
+    "Reassign a unique IPv4 address to one of the conflicting network devices.",
+    "Clear the ARP cache on R11 to remove stale entries if necessary.",
+    "Test network connectivity and stability for PC9."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "12",
+  "diagnosis_id": "api_case_12",
+  "rule_checker_findings": [
+    {
+      "issue": "Duplicate IP Address Conflict",
+      "severity": "High",
+      "evidence": "IPv4 address 192.168.100.10 is bound to multiple MAC addresses / host interfaces in ARP data.",
+      "recommended_action": "Reassign a unique IPv4 address to one of the conflicting network devices."
+    }
+  ]
+}

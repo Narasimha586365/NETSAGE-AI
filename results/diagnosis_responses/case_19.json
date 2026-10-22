@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "DHCP clients receive addresses but cannot reach off-subnet resources.",
+    "R18 show running-config output shows DHCP pool FINANCE defines default-router 192.168.170.254.",
+    "R18 show ip interface brief output shows Gi0/2 is configured with 192.168.170.1."
+  ],
+  "next_command": "show running-config",
+  "confidence": "High",
+  "root_cause": "The DHCP pool FINANCE advertises an incorrect default router 192.168.170.254 instead of the active gateway 192.168.170.1.",
+  "verification": [
+    "Run show running-config on R18 to confirm the DHCP pool FINANCE default-router is set to 192.168.170.1.",
+    "Renew the DHCP lease on a client and verify it receives the correct default gateway.",
+    "Test off-subnet reachability from a DHCP client."
+  ],
+  "fix_steps": [
+    "Access configuration mode on R18.",
+    "Enter the DHCP pool configuration mode for FINANCE.",
+    "Update the default-router option to the active gateway address 192.168.170.1.",
+    "Save the running configuration."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "19",
+  "diagnosis_id": "api_case_19",
+  "rule_checker_findings": [
+    {
+      "issue": "Incorrect DHCP Default Router",
+      "severity": "High",
+      "evidence": "DHCP pool FINANCE advertises default-router 192.168.170.254 instead of active gateway 192.168.170.1.",
+      "recommended_action": "Update default-router option in DHCP pool FINANCE to 192.168.170.1."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "PC12 IP is 192.168.110.25/24 with gateway 192.168.120.1.",
+    "R13 Gi0/0 IP is 192.168.110.1 up up.",
+    "Configured host default gateway (192.168.120.1) does not match router interface IP (192.168.110.1)."
+  ],
+  "next_command": "show ip interface brief",
+  "confidence": "High",
+  "root_cause": "PC12 has a default gateway mismatch where the configured host default gateway (192.168.120.1) does not match the router interface IP (192.168.110.1).",
+  "verification": [
+    "Run show ip interface brief on R13 to confirm the interface IP.",
+    "Manually verify PC12 default gateway configuration and test reachability to outside servers."
+  ],
+  "fix_steps": [
+    "Verify the IP address and subnet configuration of R13 interface Gi0/0.",
+    "Update host PC12 default gateway address to match the router interface IP 192.168.110.1.",
+    "Test reachability from PC12 to servers outside its subnet after the approved change."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "14",
+  "diagnosis_id": "api_case_14",
+  "rule_checker_findings": [
+    {
+      "issue": "Default Gateway Mismatch",
+      "severity": "High",
+      "evidence": "Configured host default gateway (192.168.120.1) does not match router interface IP (192.168.110.1).",
+      "recommended_action": "Update host default gateway address to 192.168.110.1."
+    }
+  ]
+}

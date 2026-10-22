@@ -1,0 +1,36 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "HQ users cannot reach 172.16.60.0/24.",
+    "Topology is HQ LAN -> R6 -> R7 -> remote LAN.",
+    "R6 show ip route shows O 172.16.60.0/24 [110/20] via 10.6.67.7.",
+    "R6 show cdp neighbors detail identifies R7 on the R6-R7 link as 10.6.67.2.",
+    "The route next-hop IP (10.6.67.7) does not match the neighbor adjacency IP (10.6.67.2)."
+  ],
+  "next_command": "show ip ospf neighbor",
+  "confidence": "High",
+  "root_cause": "OSPF route on R6 advertises an incorrect next-hop address for the R6-R7 path, as the routing table next-hop IP does not match the neighbor adjacency IP.",
+  "verification": [
+    "Run show ip route on R6 and confirm the route for 172.16.60.0/24 uses the correct next-hop.",
+    "Manually test reachability from the HQ network to 172.16.60.0/24 after the approved change."
+  ],
+  "fix_steps": [
+    "Verify the OSPF neighbor status and adjacency IP using show ip ospf neighbor.",
+    "Reconfigure the route on R6 to use the correct next-hop interface IP (10.6.67.2).",
+    "Verify that the routing table is updated with the correct next-hop IP for 172.16.60.0/24.",
+    "Test reachability from HQ users to 172.16.60.0/24."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "9",
+  "diagnosis_id": "api_case_09",
+  "rule_checker_findings": [
+    {
+      "issue": "Incorrect Route Next-Hop",
+      "severity": "High",
+      "evidence": "show ip route on R6 specifies next-hop IP that does not match neighbor adjacency IP.",
+      "recommended_action": "Reconfigure route on R6 to use correct next-hop interface IP."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "PC1 can reach its gateway.",
+    "R1's show ip route output shows connected routes for 192.168.10.0/24 and 192.168.20.0/24, but has no entry for 192.168.30.0/24."
+  ],
+  "next_command": "show ip route",
+  "confidence": "High",
+  "root_cause": "R1 is missing a route to the remote network 192.168.30.0/24.",
+  "verification": [
+    "Run show ip route on R1 and confirm 192.168.30.0/24 is present.",
+    "Manually test PC1-to-Server1 connectivity after the approved change."
+  ],
+  "fix_steps": [
+    "Verify that R1 has no route to 192.168.30.0/24 in its routing table.",
+    "Configure a static or dynamic route for network prefix 192.168.30.0/24 on R1.",
+    "Verify that a route to 192.168.30.0/24 now appears in the routing table.",
+    "Test connectivity from PC1 to Server1 at 192.168.30.10."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "6",
+  "diagnosis_id": "api_case_06",
+  "rule_checker_findings": [
+    {
+      "issue": "Missing Route",
+      "severity": "High",
+      "evidence": "show ip route on R1 does not contain an active route entry for 192.168.30.0/24.",
+      "recommended_action": "Configure a static or dynamic route for network prefix 192.168.30.0/24 on R1."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "osi_layer": "Layer 2 - Data Link",
+  "evidence": [
+    "Devices assigned to VLAN 40 cannot communicate on SW2.",
+    "SW2 show vlan brief output shows that VLAN 40 is not listed in the switch database.",
+    "Interfaces Fa0/15 and Fa0/16 are assigned access VLAN 40 in show running-config."
+  ],
+  "next_command": "show vlan brief",
+  "confidence": "High",
+  "root_cause": "VLAN 40 is missing from the switch database on SW2, despite interfaces Fa0/15 and Fa0/16 being configured in access VLAN 40.",
+  "verification": [
+    "Run show vlan brief on SW2 and confirm VLAN 40 is listed as active.",
+    "Manually test communication between devices assigned to VLAN 40 after the approved change."
+  ],
+  "fix_steps": [
+    "Access global configuration mode on SW2.",
+    "Create VLAN 40 in the VLAN database.",
+    "Verify that VLAN 40 appears in the VLAN brief output.",
+    "Test communication for devices connected to VLAN 40 ports Fa0/15 and Fa0/16."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "2",
+  "diagnosis_id": "api_case_02",
+  "rule_checker_findings": [
+    {
+      "issue": "Missing VLAN",
+      "severity": "High",
+      "evidence": "show vlan brief does not contain required VLAN 40 in switch database.",
+      "recommended_action": "Create VLAN 40 in switch vlan database."
+    }
+  ]
+}

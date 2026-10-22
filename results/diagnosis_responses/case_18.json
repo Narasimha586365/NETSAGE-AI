@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 7 - Application",
+  "evidence": [
+    "Clients on the 10.20.30.0/24 LAN receive no usable lease.",
+    "R17 show ip dhcp pool output indicates pool LAB uses network 10.20.0.0 255.255.0.0.",
+    "R17 show ip interface brief output indicates interface Gi0/0 has address 10.20.30.1 with a /24 subnet implicitly or directly related to the interface state up/up."
+  ],
+  "next_command": "show running-config",
+  "confidence": "High",
+  "root_cause": "The DHCP pool LAB is configured with network 10.20.0.0 255.255.0.0 (/16), which does not match the client LAN subnet 10.20.30.0/24 on the Gi0/0 interface (10.20.30.1/24).",
+  "verification": [
+    "Run show ip dhcp pool to confirm the network statement matches 10.20.30.0 255.255.255.0.",
+    "Manually verify that a client on the 10.20.30.0/24 LAN successfully receives a usable IP lease after the approved change."
+  ],
+  "fix_steps": [
+    "Verify the current DHCP pool configuration using show running-config or show ip dhcp pool.",
+    "Remove the incorrect network statement from the DHCP pool LAB.",
+    "Configure the correct DHCP pool network statement to match the client subnet 10.20.30.0/24 with mask 255.255.255.0.",
+    "Verify the updated DHCP pool configuration.",
+    "Test lease acquisition from a client on the 10.20.30.0/24 LAN."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "18",
+  "diagnosis_id": "api_case_18",
+  "rule_checker_findings": [
+    {
+      "issue": "Wrong DHCP Pool Network",
+      "severity": "High",
+      "evidence": "DHCP pool LAB network (10.20.0.0/16) does not match client LAN interface (10.20.30.1/24).",
+      "recommended_action": "Reconfigure DHCP pool network statement to match client subnet 10.20.30.0/24."
+    }
+  ]
+}

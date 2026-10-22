@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 2 - Data Link",
+  "evidence": [
+    "Users in VLAN 30 on SW1 cannot reach users in VLAN 30 on SW2.",
+    "SW1 show interfaces trunk output shows Gi0/1 trunking with allowed VLANs 10,20, and allowed and active VLANs 10,20.",
+    "PC5 and PC6 access ports are in VLAN 30."
+  ],
+  "next_command": "show interfaces trunk",
+  "confidence": "High",
+  "root_cause": "VLAN 30 is missing from the allowed VLAN list on the inter-switch trunk Gi0/1.",
+  "verification": [
+    "Run show interfaces trunk on SW1 and confirm VLAN 30 is included in the allowed and active VLANs list.",
+    "Manually test connectivity from PC5 to PC6 to confirm communication in VLAN 30."
+  ],
+  "fix_steps": [
+    "Verify the trunk allowed VLAN list on SW1 using show interfaces trunk.",
+    "Access global configuration mode on SW1 and the trunk interface Gi0/1.",
+    "Add VLAN 30 to the allowed trunk VLAN list using the command switchport trunk allowed vlan add 30.",
+    "Verify that VLAN 30 now appears in the allowed and active VLANs list on the trunk.",
+    "Test connectivity between PC5 and PC6 in VLAN 30."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "3",
+  "diagnosis_id": "api_case_03",
+  "rule_checker_findings": [
+    {
+      "issue": "Trunk Allowed VLAN Omission",
+      "severity": "High",
+      "evidence": "Trunk port allowed VLAN list omits intended VLAN 20.",
+      "recommended_action": "Add VLAN 20 to switchport trunk allowed vlan list."
+    }
+  ]
+}

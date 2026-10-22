@@ -1,0 +1,34 @@
+{
+  "osi_layer": "Layer 1 - Physical",
+  "evidence": [
+    "PC15 has no network connectivity through R24 Gi0/0.",
+    "Topology information indicates PC15 connects through SW15 to R24.",
+    "R24 show ip interface brief output shows GigabitEthernet0/0 is 192.168.250.1, administratively down, down."
+  ],
+  "next_command": "show ip interface brief",
+  "confidence": "High",
+  "root_cause": "GigabitEthernet0/0 on R24 is administratively down, causing a loss of network connectivity for PC15.",
+  "verification": [
+    "Run show ip interface brief on R24 and confirm GigabitEthernet0/0 status is up/up.",
+    "Manually test connectivity from PC15 after the approved change."
+  ],
+  "fix_steps": [
+    "Access global configuration mode on R24.",
+    "Enter interface configuration mode for GigabitEthernet0/0.",
+    "Issue the 'no shutdown' command to bring the interface up.",
+    "Verify the interface status changes to up/up."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "25",
+  "diagnosis_id": "api_case_25",
+  "rule_checker_findings": [
+    {
+      "issue": "Interface Administrative Shutdown",
+      "severity": "High",
+      "evidence": "show status is administratively down in configuration output.",
+      "recommended_action": "Issue 'no shutdown' under interface show configuration mode."
+    }
+  ]
+}

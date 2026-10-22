@@ -1,0 +1,31 @@
+{
+  "osi_layer": "Layer 1 - Physical",
+  "evidence": [
+    "R25 GigabitEthernet0/1 link is physically down.",
+    "R25 show interfaces GigabitEthernet0/1 output indicates the interface is down, line protocol is down (disabled), and last input never."
+  ],
+  "next_command": "show interfaces",
+  "confidence": "High",
+  "root_cause": "R25 GigabitEthernet0/1 physical link or line protocol is down.",
+  "verification": [
+    "Run show interfaces GigabitEthernet0/1 to confirm the interface and line protocol state are up."
+  ],
+  "fix_steps": [
+    "Inspect physical cabling, transceivers, and remote port enable status for GigabitEthernet0/1.",
+    "Verify administrative state using show interfaces GigabitEthernet0/1.",
+    "Issue a no shutdown command on GigabitEthernet0/1 if the interface is administratively down."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "26",
+  "diagnosis_id": "api_case_26",
+  "rule_checker_findings": [
+    {
+      "issue": "Interface Physical Down",
+      "severity": "High",
+      "evidence": "GigabitEthernet0/1 physical link or line protocol is down.",
+      "recommended_action": "Inspect physical cabling, transceivers, and remote port enable status for GigabitEthernet0/1."
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+case_id,diagnosis_source,diagnosis_id,ai_diagnosis,human_status,final_diagnosis,review_notes,reason_for_correction,reviewer,review_date
+1,AI-assisted diagnosis,api_case_01,PC2's switch access port Fa0/4 is assigned to VLAN 20 instead of the intended VLAN 10.,Accepted,PC2's switch access port Fa0/4 is assigned to VLAN 20 instead of the intended VLAN 10.,,show vlan brief confirms Fa0/4 is assigned to VLAN 20 instead of the intended VLAN 10. This matches the deterministic finding and expected fault.,Narasimha,2026-08-30

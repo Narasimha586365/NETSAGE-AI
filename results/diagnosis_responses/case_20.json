@@ -1,0 +1,33 @@
+{
+  "osi_layer": "Layer 7 - Application",
+  "evidence": [
+    "New clients cannot obtain addresses from the 192.168.180.0/24 pool.",
+    "R19 show ip output indicates Pool TRAINING for Network 192.168.180.0/24 with Total addresses 254, Leased addresses 0, and Excluded addresses 254."
+  ],
+  "next_command": "show running-config",
+  "confidence": "High",
+  "root_cause": "All 254 usable IP addresses in the 192.168.180.0/24 DHCP pool have been excluded, leaving no available addresses for new clients.",
+  "verification": [
+    "Run show ip dhcp pool and confirm that Excluded addresses is less than Total addresses and usable addresses are available.",
+    "Verify that a new client successfully obtains an IP address from the 192.168.180.0/24 pool after the approved change."
+  ],
+  "fix_steps": [
+    "Review the current DHCP excluded address configurations using show running-config to identify the incorrect or overly broad exclusion statements.",
+    "Remove or adjust the ip dhcp excluded-address range so that usable host pool addresses are left available for client leases.",
+    "Verify the DHCP pool status using show ip dhcp pool to confirm that the number of excluded addresses is reduced and usable addresses are available.",
+    "Test obtaining an IP address from a new client connected to the network."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "20",
+  "diagnosis_id": "api_case_20",
+  "rule_checker_findings": [
+    {
+      "issue": "DHCP Address Range Exclusion Error",
+      "severity": "High",
+      "evidence": "All 254 usable pool addresses are excluded from client leases.",
+      "recommended_action": "Adjust ip dhcp excluded-address range to leave usable host pool addresses."
+    }
+  ]
+}

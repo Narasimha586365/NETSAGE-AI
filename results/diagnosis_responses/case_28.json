@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 7 - Application",
+  "evidence": [
+    "PC17 cannot resolve domain names.",
+    "IP ping from PC17 to DNS server 10.60.0.10 succeeds.",
+    "PC17 ipconfig /all shows DNS Server: 10.60.0.53.",
+    "Documented DNS server IP is 10.60.0.10."
+  ],
+  "next_command": "ipconfig /all",
+  "confidence": "High",
+  "root_cause": "PC17 is configured with the incorrect DNS server IP address 10.60.0.53 instead of the documented DNS server IP address 10.60.0.10.",
+  "verification": [
+    "Run ipconfig /all on PC17 and confirm the DNS server address is 10.60.0.10.",
+    "Test domain name resolution using nslookup or by attempting to reach a known domain from PC17."
+  ],
+  "fix_steps": [
+    "Verify the current DNS configuration on PC17 using ipconfig /all.",
+    "Update the IPv4 properties on PC17 to change the preferred DNS server address from 10.60.0.53 to 10.60.0.10.",
+    "Flush the local DNS resolver cache on PC17 using ipconfig /flushdns.",
+    "Test domain name resolution on PC17."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "28",
+  "diagnosis_id": "api_case_28",
+  "rule_checker_findings": [
+    {
+      "issue": "Invalid PC DNS Server Configuration",
+      "severity": "High",
+      "evidence": "PC configured DNS server (10.60.0.53) does not match active DNS server IP (10.60.0.10).",
+      "recommended_action": "Update PC IP configuration to set DNS Server address to 10.60.0.10."
+    }
+  ]
+}

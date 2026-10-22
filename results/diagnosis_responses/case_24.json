@@ -1,0 +1,34 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "Engineering hosts cannot reach the permitted 172.16.240.0/24 service network.",
+    "Topology indicates traffic flows from Engineering through R23 to the service network.",
+    "R23 shows access-list ENG-OUT with rule '10 deny ip 10.24.0.0 0.0.255.255 172.16.240.0 0.0.0.255' applied inbound on interface Gi0/0."
+  ],
+  "next_command": "",
+  "confidence": "High",
+  "root_cause": "Extended access list ENG-OUT on R23 contains a rule that explicitly denies the engineering network access to the service network 172.16.240.0/24.",
+  "verification": [
+    "Run show access-lists on R23 and confirm the deny rule is removed or corrected to permit engineering traffic.",
+    "Manually test end-to-end connectivity from the engineering hosts to the service network after human approval."
+  ],
+  "fix_steps": [
+    "Review the current access-list ENG-OUT configuration on R23.",
+    "Modify access-list ENG-OUT to permit traffic from the engineering network to 172.16.240.0/24.",
+    "Verify the updated access-list configuration using show access-lists.",
+    "Test connectivity from the engineering hosts to the 172.16.240.0/24 service network."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "24",
+  "diagnosis_id": "api_case_24",
+  "rule_checker_findings": [
+    {
+      "issue": "ACL Denies Permitted Service Network",
+      "severity": "High",
+      "evidence": "ACL ENG-OUT rule 10 explicitly denies engineering network access to service network 172.16.240.0/24.",
+      "recommended_action": "Update ACL ENG-OUT to permit engineering hosts access to 172.16.240.0/24."
+    }
+  ]
+}

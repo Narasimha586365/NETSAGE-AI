@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 7 - Application",
+  "evidence": [
+    "New clients in VLAN 60 receive no IP address.",
+    "Topology shows clients connect through SW11 to R16 DHCP service.",
+    "show ip dhcp pool on R16 shows a pool named STAFF for network 192.168.60.0/24 but indicates no pool exists for VLAN 60 network 192.168.160.0/24.",
+    "show ip interface brief on R16 shows Gi0/1.60 with IP 192.168.160.1 in an up/up state."
+  ],
+  "next_command": "show ip dhcp pool",
+  "confidence": "High",
+  "root_cause": "The DHCP service on R16 lacks a DHCP pool for the VLAN 60 network 192.168.160.0/24.",
+  "verification": [
+    "Run show ip dhcp pool on R16 and confirm the pool for network 192.168.160.0/24 is present.",
+    "Confirm that a new client in VLAN 60 successfully obtains an IP address."
+  ],
+  "fix_steps": [
+    "Verify the missing DHCP pool for network 192.168.160.0/24 using show ip dhcp pool.",
+    "Configure a DHCP pool on R16 corresponding to the VLAN 60 network 192.168.160.0/24 with appropriate network, default-router, and other required parameters.",
+    "Verify the new DHCP pool configuration using show ip dhcp pool and show running-config.",
+    "Test that clients in VLAN 60 successfully receive an IP address."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "17",
+  "diagnosis_id": "api_case_17",
+  "rule_checker_findings": [
+    {
+      "issue": "Missing VLAN / Subinterface Configuration",
+      "severity": "High",
+      "evidence": "show ip dhcp pool indicates required VLAN network pool is missing.",
+      "recommended_action": "Configure DHCP pool and subinterface for required VLAN network."
+    }
+  ]
+}

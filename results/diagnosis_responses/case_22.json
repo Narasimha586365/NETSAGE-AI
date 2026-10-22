@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "Remote management traffic from 10.22.0.0/24 is blocked at R21.",
+    "Topology shows management traffic enters Gi0/1 from 10.22.0.0/24.",
+    "R21 show running-config output shows ip access-group MGMT-BLOCK out on Gi0/1.",
+    "Access list MGMT-BLOCK has sequence 10 deny ip 10.22.0.0 0.0.0.255 any and sequence 20 permit ip any any."
+  ],
+  "next_command": "show running-config interface Gi0/1",
+  "confidence": "High",
+  "root_cause": "The extended access list MGMT-BLOCK is applied outbound ('out') on interface Gi0/1 instead of inbound ('in'), meaning traffic from 10.22.0.0/24 entering Gi0/1 is not being blocked as intended.",
+  "verification": [
+    "Run show running-config interface Gi0/1 and confirm that ip access-group MGMT-BLOCK in is configured.",
+    "Verify that remote management traffic from 10.22.0.0/24 is correctly blocked/controlled as intended after human review."
+  ],
+  "fix_steps": [
+    "Verify the current interface configuration and ACL application on R21 Gi0/1 using show running-config interface Gi0/1.",
+    "Remove the incorrect outbound ACL application from interface Gi0/1 using 'no ip access-group MGMT-BLOCK out'.",
+    "Apply the access list correctly in the inbound direction on interface Gi0/1 using 'ip access-group MGMT-BLOCK in'.",
+    "Verify the updated configuration using show running-config interface Gi0/1."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "22",
+  "diagnosis_id": "api_case_22",
+  "rule_checker_findings": [
+    {
+      "issue": "Incorrect ACL Interface Direction",
+      "severity": "High",
+      "evidence": "Access list MGMT-BLOCK is applied outbound ('out') on Gi0/1 instead of inbound ('in').",
+      "recommended_action": "Re-apply access-group MGMT-BLOCK inbound ('in') on Gi0/1 interface."
+    }
+  ]
+}

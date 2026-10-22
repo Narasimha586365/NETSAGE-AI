@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "Branch users cannot reach external networks.",
+    "R5 show ip route output shows directly connected network 10.5.0.0/24.",
+    "Gateway of last resort is not set on R5."
+  ],
+  "next_command": "show ip route",
+  "confidence": "High",
+  "root_cause": "R5 is missing a default gateway/route (0.0.0.0/0), preventing branch users from reaching external networks.",
+  "verification": [
+    "Run show ip route on R5 and confirm the gateway of last resort or a 0.0.0.0/0 route is present.",
+    "Manually test external network reachability from branch users after the approved change."
+  ],
+  "fix_steps": [
+    "Verify that the gateway of last resort is not set on R5 using show ip route.",
+    "Identify the correct upstream router IP address or exit interface from the topology.",
+    "Configure a static default route on R5 pointing to the upstream router.",
+    "Verify that the default route (0.0.0.0/0) appears in R5's routing table.",
+    "Test external network reachability from branch users."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "8",
+  "diagnosis_id": "api_case_08",
+  "rule_checker_findings": [
+    {
+      "issue": "Missing Route",
+      "severity": "High",
+      "evidence": "show ip route on R5 does not contain an active route entry for 0.0.0.0/0.",
+      "recommended_action": "Configure a static or dynamic route for network prefix 0.0.0.0/0 on R5."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "Sales LAN cannot reach the data-center 192.168.80.0/24 network.",
+    "Topology shows Sales -> R8 -> R9 -> data center.",
+    "R8 show ip route displays static route S 192.168.80.0/24 [1/0] via 10.8.89.9.",
+    "R8 interface Gi0/1 is up with IP 10.8.89.1 and R9 link address is 10.8.89.2.",
+    "The static route next-hop 10.8.89.9 does not match the neighbor adjacency IP 10.8.89.2."
+  ],
+  "next_command": "show running-config",
+  "confidence": "High",
+  "root_cause": "The static route to 192.168.80.0/24 on R8 points to an incorrect next-hop IP (10.8.89.9) that does not match the neighbor adjacency IP (10.8.89.2).",
+  "verification": [
+    "Run show ip route on R8 to confirm the route to 192.168.80.0/24 uses the correct next hop 10.8.89.2.",
+    "Test reachability from the Sales LAN to the 192.168.80.0/24 data-center network."
+  ],
+  "fix_steps": [
+    "Verify the current static route configuration on R8 using show running-config or show ip route.",
+    "Remove the incorrect static route pointing to next-hop 10.8.89.9.",
+    "Configure the corrected static route for 192.168.80.0/24 pointing to the correct neighbor adjacency IP 10.8.89.2.",
+    "Verify that the updated route is correctly installed in R8's routing table."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "10",
+  "diagnosis_id": "api_case_10",
+  "rule_checker_findings": [
+    {
+      "issue": "Incorrect Route Next-Hop",
+      "severity": "High",
+      "evidence": "show ip route on R8 specifies next-hop IP that does not match neighbor adjacency IP.",
+      "recommended_action": "Reconfigure route on R8 to use correct next-hop interface IP."
+    }
+  ]
+}

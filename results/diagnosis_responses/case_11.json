@@ -1,0 +1,27 @@
+{
+  "osi_layer": "Unknown",
+  "evidence": [
+    "PC8 can reach its gateway 192.168.90.1.",
+    "Topology includes PC8 -> SW5 -> R10 -> remote server.",
+    "No show ip route, ACL, or interface output has been supplied."
+  ],
+  "next_command": "show ip route",
+  "confidence": "Low",
+  "root_cause": "The cause is not yet confirmed; possible causes include missing routing, ACL restrictions, or interface/path issues along the route through SW5 and R10.",
+  "verification": [
+    "Verification is pending until routing, ACL, and interface outputs are reviewed and a human approves any changes."
+  ],
+  "fix_steps": [
+    "Execute the recommended show ip route command to inspect the routing table on the gateway and routing devices.",
+    "Collect additional interface, ACL, and trunk verification data along the path from PC8 to the remote server.",
+    "Review the gathered evidence against the network design.",
+    "Propose a targeted configuration change only after confirming the specific root cause.",
+    "Retest PC8 connectivity to the remote server after applying any approved fix."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "11",
+  "diagnosis_id": "api_case_11",
+  "rule_checker_findings": []
+}

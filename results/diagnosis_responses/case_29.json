@@ -1,0 +1,27 @@
+{
+  "osi_layer": "Layer 7 - Application",
+  "evidence": [
+    "PC18 can reach its default gateway 172.16.30.1 and ping it successfully.",
+    "nslookup portal.lab.local times out on PC18.",
+    "No server service status output or DNS configuration output has been supplied."
+  ],
+  "next_command": "nslookup",
+  "confidence": "Low",
+  "root_cause": "The cause of the name resolution failure for portal.lab.local is unconfirmed due to insufficient evidence regarding DNS configuration, DNS server reachability, or DNS service availability.",
+  "verification": [
+    "Verification is pending until DNS configuration and reachability evidence are collected and a human approves a correction."
+  ],
+  "fix_steps": [
+    "Verify the DNS server configuration on PC18 to ensure a valid DNS server IP address is configured.",
+    "Test direct connectivity and responsiveness to the DNS server IP address.",
+    "Check server service status and DNS application logs once access is available.",
+    "Apply corrective configuration changes only after the root cause is identified through verified evidence.",
+    "Retest name resolution using nslookup portal.lab.local."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "29",
+  "diagnosis_id": "api_case_29",
+  "rule_checker_findings": []
+}

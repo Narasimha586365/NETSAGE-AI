@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "Guest devices cannot access the internet even though the policy should restrict only internal servers.",
+    "Guest VLAN routes through R22 to the internet according to the topology information.",
+    "R22 has interface Gi0/0.70 configured with ip access-group GUEST-POLICY in.",
+    "Extended IP access list GUEST-POLICY contains rule '10 deny ip 192.168.70.0 0.0.0.255 any'."
+  ],
+  "next_command": "show access-lists",
+  "confidence": "High",
+  "root_cause": "The GUEST-POLICY ACL applied to interface Gi0/0.70 denies all traffic from the guest subnet (192.168.70.0/24) to any destination, which incorrectly blocks internet access instead of restricting only internal servers.",
+  "verification": [
+    "Run show access-lists and verify the GUEST-POLICY rules match the intended restrictions.",
+    "Test internet connectivity from a guest device after human review and approval."
+  ],
+  "fix_steps": [
+    "Review the current GUEST-POLICY access list configuration using show access-lists.",
+    "Remove or modify the over-broad deny rule that blocks all traffic from 192.168.70.0/24 to any destination.",
+    "Configure specific deny statements in GUEST-POLICY targeting only the internal server subnets while permitting internet traffic.",
+    "Apply the updated access list to interface Gi0/0.70."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "23",
+  "diagnosis_id": "api_case_23",
+  "rule_checker_findings": [
+    {
+      "issue": "Over-broad ACL Policy Denial",
+      "severity": "High",
+      "evidence": "ACL GUEST-POLICY rule denies guest subnet traffic broadly.",
+      "recommended_action": "Restrict ACL GUEST-POLICY deny statements to internal server subnets only."
+    }
+  ]
+}

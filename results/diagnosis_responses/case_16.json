@@ -1,0 +1,33 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "PC14 has IP address 192.168.140.30/24 and gateway 192.168.140.254.",
+    "R15 Gi0/0 is configured with IP address 192.168.140.1 255.255.255.0 and is up up.",
+    "The configured host default gateway (192.168.140.254) does not match the router interface IP (192.168.140.1)."
+  ],
+  "next_command": "show ip interface brief",
+  "confidence": "High",
+  "root_cause": "PC14 is configured with a default gateway of 192.168.140.254, which does not match the actual router interface IP address of 192.168.140.1.",
+  "verification": [
+    "Verify PC14 network settings reflect the correct default gateway 192.168.140.1.",
+    "Manually test PC14 connectivity to routed networks after the approved change."
+  ],
+  "fix_steps": [
+    "Verify the IP address of R15 interface Gi0/0 using show ip interface brief.",
+    "Update PC14 host default gateway address from 192.168.140.254 to 192.168.140.1.",
+    "Test reachability to routed networks from PC14."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "16",
+  "diagnosis_id": "api_case_16",
+  "rule_checker_findings": [
+    {
+      "issue": "Default Gateway Mismatch",
+      "severity": "High",
+      "evidence": "Configured host default gateway (192.168.140.254) does not match router interface IP (192.168.140.1).",
+      "recommended_action": "Update host default gateway address to 192.168.140.1."
+    }
+  ]
+}

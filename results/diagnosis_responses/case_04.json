@@ -1,0 +1,33 @@
+{
+  "osi_layer": "Layer 2 - Data Link",
+  "evidence": [
+    "Traffic crossing the SW3-R1 trunk intermittently fails for untagged management traffic.",
+    "SW3 show interfaces trunk output indicates Gi0/2 native vlan 99.",
+    "R1 show interfaces Gi0/0 trunk output indicates Native VLAN: 1."
+  ],
+  "next_command": "show interfaces trunk",
+  "confidence": "High",
+  "root_cause": "A native VLAN mismatch exists between SW3 (configured with native VLAN 99 on Gi0/2) and R1 (configured with native VLAN 1 on Gi0/0), causing untagged management traffic crossing the SW3-R1 trunk to fail intermittently.",
+  "verification": [
+    "Run show interfaces trunk on both SW3 and R1 to confirm that the native VLAN matches on both ends of the link.",
+    "Manually test untagged management traffic connectivity across the SW3-R1 trunk after the approved change."
+  ],
+  "fix_steps": [
+    "Verify the native VLAN configuration on SW3 interface Gi0/2 and R1 interface Gi0/0 using show interfaces trunk.",
+    "Configure the same native VLAN on both ends of the SW3-R1 trunk to resolve the mismatch.",
+    "Verify that untagged management traffic can now successfully cross the SW3-R1 trunk without intermittent failures."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "4",
+  "diagnosis_id": "api_case_04",
+  "rule_checker_findings": [
+    {
+      "issue": "Native VLAN Mismatch",
+      "severity": "High",
+      "evidence": "Connected trunk endpoints show different native VLAN values.",
+      "recommended_action": "Configure the same native VLAN on both ends of the trunk."
+    }
+  ]
+}

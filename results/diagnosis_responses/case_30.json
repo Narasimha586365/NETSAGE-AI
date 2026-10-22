@@ -1,0 +1,33 @@
+{
+  "osi_layer": "Layer 7 - Application",
+  "evidence": [
+    "Clients using DNS server 172.16.30.53 receive query time-outs despite IP ping reachability.",
+    "Ping to 172.16.30.53 succeeds.",
+    "DNS Server configuration states DNS Service: Off."
+  ],
+  "next_command": "show running-config",
+  "confidence": "High",
+  "root_cause": "The DNS server at 172.16.30.53 has its DNS service turned off, causing query time-outs despite IP reachability.",
+  "verification": [
+    "Verify that the DNS server configuration shows DNS Service as 'On'.",
+    "Manually perform a DNS lookup test from a client to confirm successful query responses."
+  ],
+  "fix_steps": [
+    "Access the DNS server configuration or control panel for 172.16.30.53.",
+    "Enable the DNS Service state to 'On'.",
+    "Test DNS query resolution from a client using the DNS server 172.16.30.53."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "30",
+  "diagnosis_id": "api_case_30",
+  "rule_checker_findings": [
+    {
+      "issue": "Upstream DNS Service Disabled",
+      "severity": "High",
+      "evidence": "DNS service is turned off on the target DNS server 172.16.30.53.",
+      "recommended_action": "Enable DNS Service state to 'On' in DNS server control panel."
+    }
+  ]
+}

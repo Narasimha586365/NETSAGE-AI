@@ -1,0 +1,34 @@
+{
+  "osi_layer": "Layer 2 - Data Link",
+  "evidence": [
+    "SW4 show vlan brief indicates VLAN 50 Engineering is active on Fa0/10-12.",
+    "SW4 running-config for interface Fa0/13 shows switchport mode access and switchport access vlan 1.",
+    "PC7 is connected to Fa0/13 and cannot communicate with peers in its intended VLAN 50."
+  ],
+  "next_command": "show running-config interface Fa0/13",
+  "confidence": "High",
+  "root_cause": "PC7's switch access port Fa0/13 on SW4 is assigned to default VLAN 1 instead of the intended VLAN 50.",
+  "verification": [
+    "Run 'show vlan brief' on SW4 and confirm interface Fa0/13 is assigned to VLAN 50.",
+    "Test connectivity from PC7 to peers in VLAN 50."
+  ],
+  "fix_steps": [
+    "Access SW4 and enter global configuration mode.",
+    "Navigate to interface Fa0/13 configuration mode.",
+    "Reassign switch port Fa0/13 to access VLAN 50 using the command 'switchport access vlan 50'.",
+    "Save the running configuration to startup configuration."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "5",
+  "diagnosis_id": "api_case_05",
+  "rule_checker_findings": [
+    {
+      "issue": "Incorrect VLAN Assignment",
+      "severity": "Medium",
+      "evidence": "Switch port Fa0/13 is assigned to default VLAN 1 instead of access VLAN 50.",
+      "recommended_action": "Reassign switch port Fa0/13 to access VLAN 50."
+    }
+  ]
+}

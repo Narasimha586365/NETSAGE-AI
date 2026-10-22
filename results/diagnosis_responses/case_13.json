@@ -1,0 +1,33 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "PC11 has IP 10.10.1.20, mask 255.255.0.0, and gateway 10.10.1.1.",
+    "R12 Gi0/0 has IP 10.10.1.1 with mask 255.255.255.0.",
+    "Host subnet mask (255.255.0.0) does not match gateway subnet mask (255.255.255.0)."
+  ],
+  "next_command": "show ip interface brief",
+  "confidence": "High",
+  "root_cause": "PC11 has an incorrect subnet mask (255.255.0.0) that does not match the default gateway's subnet mask (255.255.255.0).",
+  "verification": [
+    "Run show ip interface brief on R12 to verify interface status.",
+    "Manually test PC11-to-gateway reachability after the approved change."
+  ],
+  "fix_steps": [
+    "Verify the IP configuration and subnet mask on PC11 and R12 Gi0/0.",
+    "Reconfigure host subnet mask on PC11 to match gateway interface mask (255.255.255.0).",
+    "Test reachability from PC11 to its default gateway 10.10.1.1."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "13",
+  "diagnosis_id": "api_case_13",
+  "rule_checker_findings": [
+    {
+      "issue": "Wrong Subnet Mask",
+      "severity": "Medium",
+      "evidence": "Host subnet mask (255.255.0.0) does not match gateway subnet mask (255.255.255.0).",
+      "recommended_action": "Reconfigure host subnet mask to match gateway interface mask (255.255.255.0)."
+    }
+  ]
+}

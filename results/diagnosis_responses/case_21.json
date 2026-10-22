@@ -1,0 +1,35 @@
+{
+  "osi_layer": "Layer 3 - Network",
+  "evidence": [
+    "Users on 192.168.210.0/24 cannot reach the web server at 10.50.0.10 on TCP 80.",
+    "Topology indicates users connect through R20 to the web server.",
+    "R20 show access-lists output shows Extended IP access list WEB-FILTER with statement 10 deny tcp 192.168.210.0 0.0.0.255 host 10.50.0.10 eq 80.",
+    "R20 show running-config interface Gi0/0 output shows ip access-group WEB-FILTER in."
+  ],
+  "next_command": "",
+  "confidence": "High",
+  "root_cause": "Extended access list WEB-FILTER on R20 explicitly denies TCP port 80 traffic from 192.168.210.0/24 to web server 10.50.0.10 inbound on interface Gi0/0.",
+  "verification": [
+    "Run show access-lists on R20 and confirm the permit statement precedes the deny statement for TCP port 80.",
+    "Manually test user connectivity to the web server on TCP 80 after the approved change."
+  ],
+  "fix_steps": [
+    "Review the existing access list WEB-FILTER entries and interface Gi0/0 configuration on R20.",
+    "Modify the WEB-FILTER access list to permit TCP traffic on port 80 from 192.168.210.0/24 to host 10.50.0.10 before the deny statement.",
+    "Verify the updated access list rules and interface application.",
+    "Test TCP port 80 connectivity from the 192.168.210.0/24 network to the web server at 10.50.0.10."
+  ],
+  "diagnosis_source": "AI-assisted diagnosis",
+  "provider": "AI Service",
+  "model": "Configured Engine",
+  "case_id": "21",
+  "diagnosis_id": "api_case_21",
+  "rule_checker_findings": [
+    {
+      "issue": "ACL HTTP Traffic Denial",
+      "severity": "High",
+      "evidence": "Extended ACL WEB-FILTER explicitly denies TCP port 80 traffic to 10.50.0.10.",
+      "recommended_action": "Modify ACL WEB-FILTER to permit TCP port 80 traffic to web server 10.50.0.10."
+    }
+  ]
+}

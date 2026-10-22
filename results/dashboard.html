@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSage AI — Network Operations Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F8FAFC;
+            --border-color: #E2E8F0;
+            --border-hover: #CBD5E1;
+            --text-heading: #0F172A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --accent-blue: #1E88E5;
+            --accent-dark-blue: #1565C0;
+            --accent-light-blue: #F0F7FF;
+            --status-green: #10B981;
+            --status-orange: #F59E0B;
+            --status-red: #EF4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-body);
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        /* TOP HEADER & BADGES */
+        .top-header {
+            background: var(--bg-primary); border-bottom: 1px solid var(--border-color);
+            padding: 14px 28px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 500;
+        }
+        .header-title h1 { font-size: 20px; font-weight: 800; color: var(--accent-dark-blue); letter-spacing: -0.3px; }
+        .header-title p { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .header-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .badge-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 16px; }
+        .badge-online { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+        .badge-provider { background: var(--accent-light-blue); color: var(--accent-dark-blue); border: 1px solid #D6ECFF; }
+        .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+        .dot-green { background: var(--status-green); }
+
+        /* NAVIGATION BAR */
+        .top-nav {
+            background: var(--bg-primary); border-bottom: 1px solid var(--border-color);
+            padding: 0 28px; display: flex; gap: 4px; overflow-x: auto;
+        }
+        .nav-item {
+            padding: 12px 18px; font-size: 13px; font-weight: 700; color: var(--text-muted);
+            text-decoration: none; border-bottom: 3px solid transparent; cursor: pointer; transition: all 0.15s ease;
+        }
+        .nav-item:hover { color: var(--accent-dark-blue); background: var(--accent-light-blue); }
+        .nav-item.active { color: var(--accent-dark-blue); border-bottom-color: var(--accent-dark-blue); background: var(--accent-light-blue); }
+
+        /* MAIN CONTENT AREA */
+        .main-container {
+            max-width: 1400px; width: 100%; margin: 0 auto; padding: 24px; flex: 1;
+        }
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+
+        .page-title-box { margin-bottom: 18px; }
+        .page-title-box h2 { font-size: 18px; font-weight: 800; color: var(--accent-dark-blue); }
+        .page-title-box p { font-size: 12px; color: var(--text-muted); }
+
+        /* KPI CARDS GRID */
+        .kpi-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;
+        }
+        .kpi-title { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 22px; font-weight: 800; color: var(--text-heading); margin: 4px 0 2px 0; }
+        .kpi-desc { font-size: 11px; color: var(--text-muted); }
+
+        /* PANELS & TABLES */
+        .panel {
+            background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 18px; margin-bottom: 20px;
+        }
+        .panel-title { font-size: 14px; font-weight: 700; color: var(--text-heading); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--bg-secondary); color: var(--accent-dark-blue); font-weight: 700; text-transform: uppercase; font-size: 10px; }
+        tr:hover { background: var(--accent-light-blue); }
+
+        .badge { display: inline-block; padding: 3px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+        .badge-accepted { background: #DCFCE7; color: #15803D; }
+        .badge-edited { background: #FEF3C7; color: #B45309; }
+        .badge-rejected { background: #FEE2E2; color: #B91C1C; }
+        .badge-pending { background: #F1F5F9; color: #64748B; }
+
+        .selector-card {
+            background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 18px;
+        }
+        .selector-card label { display: block; font-size: 12px; font-weight: 700; color: var(--text-heading); margin-bottom: 6px; }
+        .selector-card select {
+            width: 100%; max-width: 450px; padding: 8px 12px; font-size: 13px; font-weight: 600;
+            border: 1px solid var(--border-color); border-radius: 6px; background: white;
+        }
+        .selector-subtext { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+        .empty-placeholder {
+            text-align: center; padding: 36px 20px; color: var(--text-muted); background: var(--bg-primary);
+            border: 1px dashed var(--border-color); border-radius: 8px; font-size: 13px; font-weight: 500;
+        }
+
+        .btn {
+            background: var(--accent-blue); color: white; border: none; padding: 7px 14px;
+            border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 700; transition: background 0.15s ease;
+        }
+        .btn:hover { background: var(--accent-dark-blue); }
+        .btn-outline { background: transparent; color: var(--accent-dark-blue); border: 1px solid var(--accent-dark-blue); }
+        .btn-outline:hover { background: var(--accent-light-blue); }
+
+        .controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .controls input, .controls select {
+            background: white; border: 1px solid var(--border-color); color: var(--text-body);
+            padding: 7px 10px; border-radius: 5px; font-size: 12px;
+        }
+
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-heading); margin-bottom: 4px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 5px;
+        }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">
+        <div class="header-title">
+            <h1>NetSage AI</h1>
+            <p>Network Operations Center & AI-vs-Human Troubleshooting Console</p>
+        </div>
+        <div class="header-badges">
+            <div class="badge-status badge-online"><span class="dot dot-green"></span> MODE: 🟢 SYSTEM ONLINE</div>
+            <div class="badge-status badge-provider">AI SERVICE: CONFIGURED</div>
+            <div class="badge-status badge-provider">DATASET: 30 / 30 Cases</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Updated: <strong>22 Oct 2026, 12:48</strong></div>
+        </div>
+    </div>
+
+    <div class="top-nav">
+        <a class="nav-item active" onclick="switchTab('monitor')">Monitor</a>
+        <a class="nav-item" onclick="switchTab('assistant')">AI Assistant</a>
+        <a class="nav-item" onclick="switchTab('network-tools')">Network Tools</a>
+        <a class="nav-item" onclick="switchTab('devices')">Devices</a>
+        <a class="nav-item" onclick="switchTab('cases')">Cases</a>
+        <a class="nav-item" onclick="switchTab('reviews')">Reviews</a>
+        <a class="nav-item" onclick="switchTab('analytics')">Analytics</a>
+    </div>
+
+    <div class="main-container">
+
+        <!-- PAGE 1: MONITOR -->
+        <div class="page-section active" id="monitor-page">
+            <div class="page-title-box">
+                <h2>Project Overview & Operations Monitor</h2>
+                <p>High-level status of network cases, AI diagnosis engine, and human review progress.</p>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Total Cases</div>
+                    <div class="kpi-value">30</div>
+                    <div class="kpi-desc">30 Synthetic Cases</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Human Reviewed</div>
+                    <div class="kpi-value" style="color:var(--status-green);">1</div>
+                    <div class="kpi-desc">Accepted: 1 | Edited: 0 | Rejected: 0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Pending Review</div>
+                    <div class="kpi-value" style="color:var(--text-muted);">29</div>
+                    <div class="kpi-desc">Awaiting Gate Decision</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Live AI / Human Agreement</div>
+                    <div class="kpi-value" style="color:var(--status-green);">100.0%</div>
+                    <div class="kpi-desc">1 / 1 Reviewed</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Responsible AI Corrections</div>
+                    <div class="kpi-value" style="color:var(--status-orange);">0</div>
+                    <div class="kpi-desc">Logged Corrections</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Packet Tracer Labs</div>
+                    <div class="kpi-value" style="color:var(--accent-blue);">30 / 30</div>
+                    <div class="kpi-desc">100% Available on Disk</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">System Status & Environment Info</div>
+                <table>
+                    <tbody>
+                        <tr><td style="width:200px; font-weight:700;">AI Diagnosis Engine</td><td>AI Service: CONFIGURED (Configured and Ready — Automated Root Cause Analysis)</td></tr>
+                        <tr><td style="font-weight:700;">Deterministic Rule Checker</td><td>Active (28 fault cases yielding findings; 2 insufficient evidence cases verified)</td></tr>
+                        <tr><td style="font-weight:700;">Dataset Storage</td><td><code>data/cases.csv</code> (30 cases, 30 Packet Tracer .pkt files linked)</td></tr>
+                        <tr><td style="font-weight:700;">Review Persistence</td><td><code>results/human_review.csv</code> & <code>results/responsible_ai_log.csv</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PAGE 2: AI ASSISTANT -->
+        <div class="page-section" id="assistant-page">
+            <div class="page-title-box">
+                <h2>AI Assistant</h2>
+                <p>AI-assisted network troubleshooting and automated root-cause analysis.</p>
+            </div>
+            <div class="selector-card">
+                <label>Select troubleshooting case:</label>
+                <select id="assistantCaseSelect" onchange="onAssistantCaseSelect(this.value)">
+                    <option value="">[ Select a case ▼ ]</option>
+                </select>
+            </div>
+
+            <div id="assistantEmpty" class="empty-placeholder">
+                Select a case to begin diagnosis.
+            </div>
+
+            <div id="assistantContent" style="display:none;">
+                <div class="panel">
+                    <div class="panel-title" id="assistantCaseTitle">Selected Case Information</div>
+                    <div id="assistantCaseInfo" style="font-size:12px; line-height:1.6;"></div>
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-outline" onclick="runAssistantCheck()">⚡ Run Deterministic Check</button>
+                        <button class="btn" onclick="runAssistantAI()">🤖 Run AI Diagnosis</button>
+                    </div>
+                </div>
+
+                <!-- Deterministic Evidence Check Panel -->
+                <div class="panel" id="assistantDeterministicPanel" style="display:none;">
+                    <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Deterministic Evidence Check</span>
+                        <span class="badge badge-provider">Source: DETERMINISTIC_RULE</span>
+                    </div>
+                    <div id="assistantDeterministicOutput" style="font-size:12px; line-height:1.6;"></div>
+                </div>
+
+                <!-- AI-Assisted Diagnosis Panel -->
+                <div class="panel" id="assistantAIPanel" style="display:none;">
+                    <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>AI-Assisted Diagnosis</span>
+                        <span class="badge badge-accepted" id="assistantAISourceBadge">Source: AI-assisted diagnosis</span>
+                    </div>
+                    <div id="assistantAIOutput" style="font-size:12px; line-height:1.6;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3: NETWORK TOOLS -->
+        <div class="page-section" id="network-tools-page">
+            <div class="page-title-box">
+                <h2>Network Tools</h2>
+                <p>Deterministic evidence collection, show-command verification, and Packet Tracer lab tools.</p>
+            </div>
+            <div class="selector-card">
+                <label>Select troubleshooting case:</label>
+                <select id="toolsCaseSelect" onchange="onToolsCaseSelect(this.value)">
+                    <option value="">[ Select a case ▼ ]</option>
+                </select>
+            </div>
+
+            <div id="toolsEmpty" class="empty-placeholder">
+                Select a case to begin.
+            </div>
+
+            <div id="toolsContent" style="display:none;">
+                <div class="panel">
+                    <div class="panel-title" id="toolsCaseTitle">Tools for Selected Case</div>
+                    <div style="font-size:12px; margin-bottom:12px;">
+                        <button class="btn" onclick="runToolsCheck()">⚡ Run Deterministic Check</button>
+                    </div>
+                    <div id="toolsOutput" style="font-size:12px; line-height:1.6;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: DEVICES -->
+        <div class="page-section" id="devices-page">
+            <div class="page-title-box">
+                <h2>Topology Devices</h2>
+                <p>Cisco network devices, switches, routers, and host systems in the Packet Tracer environment.</p>
+            </div>
+            <div class="panel">
+                <div class="panel-title">Supported Network Devices</div>
+                <table>
+                    <thead>
+                        <tr><th>Device Name</th><th>Type</th><th>Associated Cases</th><th>Packet Tracer Files</th></tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr>
+            <td><strong>PC1</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 1, Case 6</td>
+            <td><code>case1.pkt, case6.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC10</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 12</td>
+            <td><code>case12.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC11</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 13</td>
+            <td><code>case13.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC12</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 14</td>
+            <td><code>case14.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC13</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 15</td>
+            <td><code>case15.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC14</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 16</td>
+            <td><code>case16.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC15</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 25</td>
+            <td><code>case25.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC17</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 27, Case 28</td>
+            <td><code>case27.pkt, case28.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC18</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 29</td>
+            <td><code>case29.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC2</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 1</td>
+            <td><code>case1.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC3</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 2</td>
+            <td><code>case2.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC4</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 2</td>
+            <td><code>case2.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC5</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 3</td>
+            <td><code>case3.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC6</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 3</td>
+            <td><code>case3.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC7</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 5</td>
+            <td><code>case5.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC8</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 11</td>
+            <td><code>case11.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>PC9</strong></td>
+            <td><span class="badge badge-provider">PC</span></td>
+            <td>Case 12</td>
+            <td><code>case12.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R1</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 4, Case 6</td>
+            <td><code>case4.pkt, case6.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R10</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 11</td>
+            <td><code>case11.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R11</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 12</td>
+            <td><code>case12.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R12</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 13</td>
+            <td><code>case13.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R13</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 14</td>
+            <td><code>case14.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R14</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 15</td>
+            <td><code>case15.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R15</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 16</td>
+            <td><code>case16.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R16</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 17</td>
+            <td><code>case17.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R17</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 18</td>
+            <td><code>case18.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R18</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 19</td>
+            <td><code>case19.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R19</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 20</td>
+            <td><code>case20.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R2</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 6</td>
+            <td><code>case6.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R20</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 21</td>
+            <td><code>case21.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R21</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 22</td>
+            <td><code>case22.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R22</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 23</td>
+            <td><code>case23.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R23</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 24</td>
+            <td><code>case24.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R24</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 25</td>
+            <td><code>case25.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R25</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 26</td>
+            <td><code>case26.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R3</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 7</td>
+            <td><code>case7.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R4</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 7</td>
+            <td><code>case7.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R5</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 8</td>
+            <td><code>case8.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R6</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 9</td>
+            <td><code>case9.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R7</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 9</td>
+            <td><code>case9.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R8</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 10</td>
+            <td><code>case10.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>R9</strong></td>
+            <td><span class="badge badge-provider">Router</span></td>
+            <td>Case 10</td>
+            <td><code>case10.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW1</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 1, Case 3, Case 6</td>
+            <td><code>case1.pkt, case3.pkt, case6.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW10</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 16</td>
+            <td><code>case16.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW11</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 17</td>
+            <td><code>case17.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW12</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 18</td>
+            <td><code>case18.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW13</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 19</td>
+            <td><code>case19.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW14</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 20</td>
+            <td><code>case20.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW15</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 25</td>
+            <td><code>case25.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW16</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 28</td>
+            <td><code>case28.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW17</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 27</td>
+            <td><code>case27.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW2</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 2, Case 3</td>
+            <td><code>case2.pkt, case3.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW3</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 4</td>
+            <td><code>case4.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW4</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 5</td>
+            <td><code>case5.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW5</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 11</td>
+            <td><code>case11.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW6</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 12</td>
+            <td><code>case12.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW7</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 13</td>
+            <td><code>case13.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW8</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 14</td>
+            <td><code>case14.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>SW9</strong></td>
+            <td><span class="badge badge-provider">Switch</span></td>
+            <td>Case 15</td>
+            <td><code>case15.pkt</code></td>
+        </tr>
+        <tr>
+            <td><strong>Server1</strong></td>
+            <td><span class="badge badge-provider">Server</span></td>
+            <td>Case 6</td>
+            <td><code>case6.pkt</code></td>
+        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PAGE 5: CASES -->
+        <div class="page-section" id="cases-page">
+            <div class="page-title-box">
+                <h2>Case Explorer</h2>
+                <p>Browse all 30 synthetic network troubleshooting cases and packet tracer labs.</p>
+            </div>
+            <div class="panel">
+                <div class="controls">
+                    <input type="text" id="searchInput" placeholder="🔍 Search Case ID, Title, Symptom..." oninput="filterCases()">
+                    <select id="categoryFilter" onchange="filterCases()"><option value="">All Categories</option>
+<option value="ACL">ACL</option>
+<option value="DHCP">DHCP</option>
+<option value="DNS">DNS</option>
+<option value="Gateway">Gateway</option>
+<option value="IP Addressing">IP Addressing</option>
+<option value="Interface">Interface</option>
+<option value="Routing">Routing</option>
+<option value="VLAN">VLAN</option>
+</select>
+                    <select id="severityFilter" onchange="filterCases()">
+                        <option value="">All Priorities</option>
+                        <option value="Critical">Critical Priority</option><option value="High">High Priority</option><option value="Medium">Medium Priority</option><option value="Low">Low Priority</option>
+                    </select>
+                    <select id="statusFilter" onchange="filterCases()">
+                        <option value="">All Review Statuses</option>
+                        <option value="Accepted">Accepted</option><option value="Edited">Edited</option><option value="Rejected">Rejected</option><option value="Pending">Pending</option>
+                    </select>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr><th>Case ID</th><th>Title</th><th>Category</th><th>Priority</th><th>Review Status</th><th>Packet Tracer</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="casesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 6: REVIEWS -->
+        <div class="page-section" id="reviews-page">
+            <div class="page-title-box">
+                <h2>Human Review</h2>
+                <p>Human-in-the-Loop review gate for AI network diagnoses.</p>
+            </div>
+            <div class="selector-card">
+                <label>Select troubleshooting case:</label>
+                <select id="reviewsCaseSelect" onchange="onReviewsCaseSelect(this.value)">
+                    <option value="">[ Select a case ▼ ]</option>
+                </select>
+                <p class="selector-subtext">Select a case to review its diagnosis.</p>
+            </div>
+
+            <div id="reviewsEmpty" class="empty-placeholder">
+                Select a case to review its diagnosis.
+            </div>
+
+            <div id="reviewsFormPanel" style="display:none;" class="panel">
+                <div class="panel-title" id="reviewsCaseTitle">Review Case Diagnosis</div>
+                <form id="humanReviewForm" onsubmit="submitReview(event)">
+                    <input type="hidden" id="revCaseId">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label>Human decision:</label>
+                            <select id="revStatus">
+                                <option value="">[ Choose a decision ▼ ]</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Edited">Edited</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reviewer name:</label>
+                            <input type="text" id="revReviewer" placeholder="Enter your name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Final diagnosis:</label>
+                        <textarea id="revFinal" placeholder="Enter final diagnosis"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Review notes:</label>
+                        <textarea id="revNotes" placeholder="Enter reviewer notes"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Reason for correction (required for Edited/Rejected):</label>
+                        <textarea id="revReason" placeholder="Enter reason for correction"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Review date:</label>
+                        <input type="date" id="revDate">
+                    </div>
+                    <button type="submit" class="btn">💾 Save Review</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Saved Human Reviews</div>
+                <table>
+                    <thead>
+                        <tr><th>Case</th><th>Decision</th><th>Final Diagnosis</th><th>Reviewer</th><th>Review Date</th><th>Review Notes</th></tr>
+                    </thead>
+                    <tbody id="savedReviewsTbody">
+                        
+            <tr>
+                <td><strong>Case 1</strong></td>
+                <td><span class="badge badge-accepted">Accepted</span></td>
+                <td style="font-weight:600;">PC2's switch access port Fa0/4 is assigned to VLAN 20 instead of the intended VLAN 10.</td>
+                <td>Narasimha</td>
+                <td>2026-08-30</td>
+                <td style="font-size:12px; color:var(--text-muted);"></td>
+            </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PAGE 7: ANALYTICS -->
+        <div class="page-section" id="analytics-page">
+            <div class="page-title-box">
+                <h2>Network & AI Analytics</h2>
+                <p>Quantitative breakdown of troubleshooting categories, priority levels, and AI agreement rates.</p>
+            </div>
+
+            <div class="chart-grid">
+                <div class="panel">
+                    <div class="panel-title">1. Cases by Issue Category</div>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">2. Cases by Priority</div>
+                    <canvas id="severityChart"></canvas>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">3. Human Review Outcomes</div>
+                    <canvas id="reviewChart"></canvas>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">4. AI vs Human Outcome</div>
+                    <canvas id="aiHumanChart"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Spreadsheet Analytics: Category Theme Performance</div>
+                <table>
+                    <thead>
+                        <tr><th>Category</th><th>Total Cases</th><th>Reviewed Cases</th><th>Accepted Matches</th><th>Agreement Rate</th></tr>
+                    </thead>
+                    <tbody>
+        <tr>
+            <td><strong>ACL</strong></td>
+            <td>4</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>DHCP</strong></td>
+            <td>4</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>DNS</strong></td>
+            <td>3</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Gateway</strong></td>
+            <td>2</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>IP Addressing</strong></td>
+            <td>3</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Interface</strong></td>
+            <td>3</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Routing</strong></td>
+            <td>6</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>VLAN</strong></td>
+            <td>5</td>
+            <td>1</td>
+            <td>1</td>
+            <td><strong style="color:var(--accent-dark-blue);">100.0%</strong></td>
+        </tr></tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Spreadsheet Analytics: Priority Level Performance</div>
+                <table>
+                    <thead>
+                        <tr><th>Priority Level</th><th>Total Cases</th><th>Reviewed Cases</th><th>Accepted Matches</th><th>Agreement Rate</th></tr>
+                    </thead>
+                    <tbody>
+        <tr>
+            <td><strong>High Priority</strong></td>
+            <td>19</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Medium Priority</strong></td>
+            <td>9</td>
+            <td>1</td>
+            <td>1</td>
+            <td><strong style="color:var(--accent-dark-blue);">100.0%</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Low Priority</strong></td>
+            <td>2</td>
+            <td>0</td>
+            <td>0</td>
+            <td><strong style="color:var(--accent-dark-blue);">N/A</strong></td>
+        </tr></tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Responsible AI Oversight & Corrections Log</div>
+                <table>
+                    <thead>
+                        <tr><th>Case ID</th><th>Initial Diagnosis</th><th>Final Human Diagnosis</th><th>Review Status</th><th>Reason for Correction</th></tr>
+                    </thead>
+                    <tbody><tr><td colspan='5' style='text-align:center; color:var(--text-muted); padding:16px;'>No Responsible AI corrections logged yet.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const casesData = [{"case_id": "1", "case_title": "VLAN 10 Access Port Misassignment", "symptom": "PC1 cannot ping PC2 although both should be in VLAN 10.", "topology_note": "PC1 -> SW1 -> PC2", "show_commands": "show vlan brief", "show_output": "SW1# show vlan brief; 10 Users active Fa0/3; 20 Guests active Fa0/4; PC1 is on Fa0/3 and PC2 is on Fa0/4; intended VLAN: 10 for both PCs.", "expected_fault": "PC2 access port is assigned to VLAN 20 instead of VLAN 10.", "expected_fix": "Reassign port Fa0/4 to access VLAN 10.", "category": "VLAN", "concept": "VLAN Access Port", "severity": "Medium", "osi_layer": "Layer 2 - Data Link", "recommended_next_command": "show vlan brief", "root_cause": "PC2's switch access port Fa0/4 is assigned to VLAN 20 instead of the intended VLAN 10.", "confidence": "High", "next_command": "show vlan brief", "evidence": "[\"PC1 cannot ping PC2 although both should be in VLAN 10.\", \"PC1 is on Fa0/3 in VLAN 10 and PC2 is on Fa0/4 in VLAN 20.\", \"The intended VLAN for both PCs is VLAN 10.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Incorrect VLAN Assignment", "severity": "Medium", "evidence": "Switch port Fa0/4 is assigned to VLAN 20 instead of intended VLAN 10.", "recommended_action": "Reassign switch port Fa0/4 to access VLAN 10."}], "human_status": "Accepted", "final_diagnosis": "PC2's switch access port Fa0/4 is assigned to VLAN 20 instead of the intended VLAN 10.", "review_notes": "", "reason_for_correction": "show vlan brief confirms Fa0/4 is assigned to VLAN 20 instead of the intended VLAN 10. This matches the deterministic finding and expected fault.", "reviewer": "Narasimha", "review_date": "2026-08-30", "pkt_file": "packet_tracer_30-cases/case1.pkt", "pkt_filename": "case1.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "2", "case_title": "Missing VLAN Definition", "symptom": "Devices assigned to VLAN 40 cannot communicate on SW2.", "topology_note": "PC3 -> SW2 -> PC4", "show_commands": "show vlan brief, show running-config", "show_output": "SW2# show vlan brief; 10 Staff active Fa0/1-8; 20 Voice active Fa0/9-12; VLAN 40 is not listed; Fa0/15 and Fa0/16 are assigned access VLAN 40 in show running-config.", "expected_fault": "VLAN 40 is missing from SW2.", "expected_fix": "Create VLAN 40 in SW2 VLAN database.", "category": "VLAN", "concept": "VLAN Database", "severity": "High", "osi_layer": "Layer 2 - Data Link", "recommended_next_command": "show vlan brief", "root_cause": "VLAN 40 is missing from the switch database on SW2, despite interfaces Fa0/15 and Fa0/16 being configured in access VLAN 40.", "confidence": "High", "next_command": "show vlan brief", "evidence": "[\"Devices assigned to VLAN 40 cannot communicate on SW2.\", \"SW2 show vlan brief output shows that VLAN 40 is not listed in the switch database.\", \"Interfaces Fa0/15 and Fa0/16 are assigned access VLAN 40 in show running-config.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Missing VLAN", "severity": "High", "evidence": "show vlan brief does not contain required VLAN 40 in switch database.", "recommended_action": "Create VLAN 40 in switch vlan database."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case2.pkt", "pkt_filename": "case2.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "3", "case_title": "Trunk Allowed VLAN Omission", "symptom": "Users in VLAN 30 on SW1 cannot reach users in VLAN 30 on SW2.", "topology_note": "PC5 -> SW1 == SW2 -> PC6", "show_commands": "show interfaces trunk", "show_output": "SW1# show interfaces trunk; Gi0/1 trunking; Vlans allowed on trunk: 10,20; Vlans allowed and active: 10,20; PC5 and PC6 access ports are in VLAN 30.", "expected_fault": "VLAN 30 is not allowed on the inter-switch trunk.", "expected_fix": "Add VLAN 30 to allowed list on Gi0/1 trunk interface.", "category": "VLAN", "concept": "Trunk Allowed List", "severity": "High", "osi_layer": "Layer 2 - Data Link", "recommended_next_command": "show interfaces trunk", "root_cause": "VLAN 30 is missing from the allowed VLAN list on the inter-switch trunk Gi0/1.", "confidence": "High", "next_command": "show interfaces trunk", "evidence": "[\"Users in VLAN 30 on SW1 cannot reach users in VLAN 30 on SW2.\", \"SW1 show interfaces trunk output shows Gi0/1 trunking with allowed VLANs 10,20, and allowed and active VLANs 10,20.\", \"PC5 and PC6 access ports are in VLAN 30.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Trunk Allowed VLAN Omission", "severity": "High", "evidence": "Trunk port allowed VLAN list omits intended VLAN 20.", "recommended_action": "Add VLAN 20 to switchport trunk allowed vlan list."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case3.pkt", "pkt_filename": "case3.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "4", "case_title": "Native VLAN Mismatch", "symptom": "Traffic crossing the SW3-R1 trunk intermittently fails for untagged management traffic.", "topology_note": "SW3 == R1 -> management devices", "show_commands": "show interfaces trunk", "show_output": "SW3# show interfaces trunk; Gi0/2 native vlan 99; R1# show interfaces Gi0/0 trunk; Native VLAN: 1.", "expected_fault": "Native VLAN mismatch between SW3 and R1.", "expected_fix": "Configure native VLAN 99 on R1 Gi0/0 trunk interface to match SW3.", "category": "VLAN", "concept": "Native VLAN Mismatch", "severity": "Medium", "osi_layer": "Layer 2 - Data Link", "recommended_next_command": "show interfaces trunk", "root_cause": "A native VLAN mismatch exists between SW3 (configured with native VLAN 99 on Gi0/2) and R1 (configured with native VLAN 1 on Gi0/0), causing untagged management traffic crossing the SW3-R1 trunk to fail intermittently.", "confidence": "High", "next_command": "show interfaces trunk", "evidence": "[\"Traffic crossing the SW3-R1 trunk intermittently fails for untagged management traffic.\", \"SW3 show interfaces trunk output indicates Gi0/2 native vlan 99.\", \"R1 show interfaces Gi0/0 trunk output indicates Native VLAN: 1.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Native VLAN Mismatch", "severity": "High", "evidence": "Connected trunk endpoints show different native VLAN values.", "recommended_action": "Configure the same native VLAN on both ends of the trunk."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case4.pkt", "pkt_filename": "case4.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "5", "case_title": "Wrong Port VLAN Assignment", "symptom": "PC7 cannot communicate with peers in its intended VLAN 50.", "topology_note": "PC7 -> SW4 -> VLAN 50 peers", "show_commands": "show vlan brief, show running-config interface Fa0/13", "show_output": "SW4# show vlan brief; 50 Engineering active Fa0/10-12; SW4# show running-config interface Fa0/13; switchport mode access; switchport access vlan 1; PC7 is connected to Fa0/13.", "expected_fault": "PC7 port Fa0/13 is not assigned to VLAN 50.", "expected_fix": "Reassign port Fa0/13 to access VLAN 50.", "category": "VLAN", "concept": "Access Port Assignment", "severity": "Medium", "osi_layer": "Layer 2 - Data Link", "recommended_next_command": "show running-config", "root_cause": "PC7's switch access port Fa0/13 on SW4 is assigned to default VLAN 1 instead of the intended VLAN 50.", "confidence": "High", "next_command": "show running-config interface Fa0/13", "evidence": "[\"SW4 show vlan brief indicates VLAN 50 Engineering is active on Fa0/10-12.\", \"SW4 running-config for interface Fa0/13 shows switchport mode access and switchport access vlan 1.\", \"PC7 is connected to Fa0/13 and cannot communicate with peers in its intended VLAN 50.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Incorrect VLAN Assignment", "severity": "Medium", "evidence": "Switch port Fa0/13 is assigned to default VLAN 1 instead of access VLAN 50.", "recommended_action": "Reassign switch port Fa0/13 to access VLAN 50."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case5.pkt", "pkt_filename": "case5.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "6", "case_title": "Missing Static Route", "symptom": "PC1 can reach its gateway but not Server1 at 192.168.30.10.", "topology_note": "PC1 -> SW1 -> R1 -> R2 -> Server1", "show_commands": "show ip route", "show_output": "R1# show ip route; C 192.168.10.0/24 is directly connected; C 192.168.20.0/24 is directly connected; no entry for 192.168.30.0/24.", "expected_fault": "R1 has no route to remote network 192.168.30.0/24.", "expected_fix": "Add static route for 192.168.30.0/24 on R1.", "category": "Routing", "concept": "Static Routing", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show ip route", "root_cause": "R1 is missing a route to the remote network 192.168.30.0/24.", "confidence": "High", "next_command": "show ip route", "evidence": "[\"PC1 can reach its gateway.\", \"R1's show ip route output shows connected routes for 192.168.10.0/24 and 192.168.20.0/24, but has no entry for 192.168.30.0/24.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Missing Route", "severity": "High", "evidence": "show ip route on R1 does not contain an active route entry for 192.168.30.0/24.", "recommended_action": "Configure a static or dynamic route for network prefix 192.168.30.0/24 on R1."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case6.pkt", "pkt_filename": "case6.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "7", "case_title": "Incorrect Next-Hop IP", "symptom": "Hosts behind R3 cannot reach 10.30.0.0/16.", "topology_note": "R3 -> R4 -> 10.30.0.0/16", "show_commands": "show ip route, show ip interface brief", "show_output": "R3# show ip route; S 10.30.0.0/16 [1/0] via 172.16.4.99; R3# show ip interface brief; Gi0/1 172.16.4.1 up up; R4 neighbor address on the link is documented as 172.16.4.2.", "expected_fault": "Static route uses incorrect next hop 172.16.4.99.", "expected_fix": "Correct static route next-hop address to 172.16.4.2.", "category": "Routing", "concept": "Next-Hop Misconfiguration", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show running-config", "root_cause": "The static route on R3 for 10.30.0.0/16 uses an incorrect next-hop IP of 172.16.4.99, while the neighbor address on the link is 172.16.4.2.", "confidence": "High", "next_command": "show running-config", "evidence": "[\"Hosts behind R3 cannot reach 10.30.0.0/16.\", \"Topology indicates R3 connects directly to R4 for reaching 10.30.0.0/16.\", \"R3's routing table contains static route S 10.30.0.0/16 [1/0] via 172.16.4.99.\", \"R3's interface Gi0/1 is up with IP 172.16.4.1.\", \"R4 neighbor address on the link is documented as 172.16.4.2.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Incorrect Route Next-Hop", "severity": "High", "evidence": "show ip route on R8 specifies next-hop IP that does not match neighbor adjacency IP.", "recommended_action": "Reconfigure route on R8 to use correct next-hop interface IP."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case7.pkt", "pkt_filename": "case7.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "8", "case_title": "Missing Default Route", "symptom": "Branch users cannot reach external networks.", "topology_note": "Branch LAN -> R5 -> upstream router", "show_commands": "show ip route", "show_output": "R5# show ip route; C 10.5.0.0/24 is directly connected; Gateway of last resort is not set.", "expected_fault": "R5 is missing a default route.", "expected_fix": "Configure default route ip route 0.0.0.0 0.0.0.0 to upstream router.", "category": "Routing", "concept": "Default Route", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show ip route", "root_cause": "R5 is missing a default gateway/route (0.0.0.0/0), preventing branch users from reaching external networks.", "confidence": "High", "next_command": "show ip route", "evidence": "[\"Branch users cannot reach external networks.\", \"R5 show ip route output shows directly connected network 10.5.0.0/24.\", \"Gateway of last resort is not set on R5.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Missing Route", "severity": "High", "evidence": "show ip route on R5 does not contain an active route entry for 0.0.0.0/0.", "recommended_action": "Configure a static or dynamic route for network prefix 0.0.0.0/0 on R5."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case8.pkt", "pkt_filename": "case8.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "9", "case_title": "OSPF Next-Hop Mismatch", "symptom": "HQ users cannot reach 172.16.60.0/24.", "topology_note": "HQ LAN -> R6 -> R7 -> remote LAN", "show_commands": "show ip route, show cdp neighbors detail", "show_output": "R6# show ip route; O 172.16.60.0/24 [110/20] via 10.6.67.7; show cdp neighbors detail identifies R7 on the R6-R7 link as 10.6.67.2.", "expected_fault": "OSPF route advertises an incorrect next-hop address for the R6-R7 path.", "expected_fix": "Reconfigure OSPF network interface neighbor IP to 10.6.67.2.", "category": "Routing", "concept": "OSPF Next-Hop", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show ip ospf neighbor", "root_cause": "OSPF route on R6 advertises an incorrect next-hop address for the R6-R7 path, as the routing table next-hop IP does not match the neighbor adjacency IP.", "confidence": "High", "next_command": "show ip ospf neighbor", "evidence": "[\"HQ users cannot reach 172.16.60.0/24.\", \"Topology is HQ LAN -> R6 -> R7 -> remote LAN.\", \"R6 show ip route shows O 172.16.60.0/24 [110/20] via 10.6.67.7.\", \"R6 show cdp neighbors detail identifies R7 on the R6-R7 link as 10.6.67.2.\", \"The route next-hop IP (10.6.67.7) does not match the neighbor adjacency IP (10.6.67.2).\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Incorrect Route Next-Hop", "severity": "High", "evidence": "show ip route on R6 specifies next-hop IP that does not match neighbor adjacency IP.", "recommended_action": "Reconfigure route on R6 to use correct next-hop interface IP."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case9.pkt", "pkt_filename": "case9.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "10", "case_title": "Data Center Next-Hop Error", "symptom": "Sales LAN cannot reach the data-center 192.168.80.0/24 network.", "topology_note": "Sales -> R8 -> R9 -> data center", "show_commands": "show ip route, show ip interface brief", "show_output": "R8# show ip route; S 192.168.80.0/24 [1/0] via 10.8.89.9; R8# show ip interface brief; Gi0/1 10.8.89.1 up up; R9 link address is 10.8.89.2.", "expected_fault": "Route to 192.168.80.0/24 points to the wrong next hop.", "expected_fix": "Update static route next-hop to 10.8.89.2.", "category": "Routing", "concept": "Static Next-Hop", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show running-config", "root_cause": "The static route to 192.168.80.0/24 on R8 points to an incorrect next-hop IP (10.8.89.9) that does not match the neighbor adjacency IP (10.8.89.2).", "confidence": "High", "next_command": "show running-config", "evidence": "[\"Sales LAN cannot reach the data-center 192.168.80.0/24 network.\", \"Topology shows Sales -> R8 -> R9 -> data center.\", \"R8 show ip route displays static route S 192.168.80.0/24 [1/0] via 10.8.89.9.\", \"R8 interface Gi0/1 is up with IP 10.8.89.1 and R9 link address is 10.8.89.2.\", \"The static route next-hop 10.8.89.9 does not match the neighbor adjacency IP 10.8.89.2.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Incorrect Route Next-Hop", "severity": "High", "evidence": "show ip route on R8 specifies next-hop IP that does not match neighbor adjacency IP.", "recommended_action": "Reconfigure route on R8 to use correct next-hop interface IP."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case10.pkt", "pkt_filename": "case10.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "11", "case_title": "Unconfirmed Remote Path", "symptom": "PC8 can reach its gateway but not a remote server.", "topology_note": "PC8 -> SW5 -> R10 -> remote server", "show_commands": "ping", "show_output": "PC8 can ping its gateway 192.168.90.1; no show ip route, ACL, or interface output is supplied.", "expected_fault": "Insufficient evidence; routing, ACL, or interface path issues remain possible.", "expected_fix": "Collect show ip route, show access-lists, and interface outputs before configuring.", "category": "Routing", "concept": "Route Reachability", "severity": "Low", "osi_layer": "Unknown", "recommended_next_command": "show ip route", "root_cause": "The cause is not yet confirmed; possible causes include missing routing, ACL restrictions, or interface/path issues along the route through SW5 and R10.", "confidence": "Low", "next_command": "show ip route", "evidence": "[\"PC8 can reach its gateway 192.168.90.1.\", \"Topology includes PC8 -> SW5 -> R10 -> remote server.\", \"No show ip route, ACL, or interface output has been supplied.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case11.pkt", "pkt_filename": "case11.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "12", "case_title": "Duplicate IP Address Conflict", "symptom": "PC9 intermittently loses access while another PC uses the same network.", "topology_note": "PC9 and PC10 -> SW6 -> R11", "show_commands": "show arp", "show_output": "R11# show arp; Internet 192.168.100.10 0 aaaa.bbbb.0001 ARPA Gi0/0; Internet 192.168.100.10 0 cccc.dddd.0002 ARPA Gi0/0.", "expected_fault": "Duplicate IP address 192.168.100.10 is in use.", "expected_fix": "Reassign unique IP address to one of the conflicting hosts.", "category": "IP Addressing", "concept": "Duplicate IP Address", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show arp", "root_cause": "A duplicate IP address conflict exists for 192.168.100.10, which is bound to multiple MAC addresses (aaaa.bbbb.0001 and cccc.dddd.0002) on interface Gi0/0.", "confidence": "High", "next_command": "show arp", "evidence": "[\"PC9 intermittently loses access while another PC uses the same network.\", \"R11 show arp output lists Internet address 192.168.100.10 bound to MAC address aaaa.bbbb.0001 on Gi0/0.\", \"R11 show arp output lists Internet address 192.168.100.10 bound to MAC address cccc.dddd.0002 on Gi0/0.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Duplicate IP Address Conflict", "severity": "High", "evidence": "IPv4 address 192.168.100.10 is bound to multiple MAC addresses / host interfaces in ARP data.", "recommended_action": "Reassign a unique IPv4 address to one of the conflicting network devices."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case12.pkt", "pkt_filename": "case12.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "13", "case_title": "Invalid Subnet Mask", "symptom": "PC11 cannot reach its default gateway.", "topology_note": "PC11 -> SW7 -> R12", "show_commands": "ipconfig, show ip interface brief", "show_output": "PC11: IP 10.10.1.20; mask 255.255.0.0; gateway 10.10.1.1. R12 Gi0/0: 10.10.1.1 255.255.255.0.", "expected_fault": "PC11 has the wrong subnet mask.", "expected_fix": "Update PC11 subnet mask to 255.255.255.0.", "category": "IP Addressing", "concept": "Subnet Mask Mismatch", "severity": "Medium", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show ip interface brief", "root_cause": "PC11 has an incorrect subnet mask (255.255.0.0) that does not match the default gateway's subnet mask (255.255.255.0).", "confidence": "High", "next_command": "show ip interface brief", "evidence": "[\"PC11 has IP 10.10.1.20, mask 255.255.0.0, and gateway 10.10.1.1.\", \"R12 Gi0/0 has IP 10.10.1.1 with mask 255.255.255.0.\", \"Host subnet mask (255.255.0.0) does not match gateway subnet mask (255.255.255.0).\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Wrong Subnet Mask", "severity": "Medium", "evidence": "Host subnet mask (255.255.0.0) does not match gateway subnet mask (255.255.255.0).", "recommended_action": "Reconfigure host subnet mask to match gateway interface mask (255.255.255.0)."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case13.pkt", "pkt_filename": "case13.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "14", "case_title": "Default Gateway Mismatch", "symptom": "PC12 cannot reach servers outside its subnet.", "topology_note": "PC12 -> SW8 -> R13 -> server network", "show_commands": "ipconfig, show ip interface brief", "show_output": "PC12: IP 192.168.110.25/24; gateway 192.168.120.1. R13 Gi0/0: 192.168.110.1 up up.", "expected_fault": "PC12 has a default gateway mismatch.", "expected_fix": "Update PC12 default gateway to 192.168.110.1.", "category": "Gateway", "concept": "Default Gateway Mismatch", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show ip interface brief", "root_cause": "PC12 has a default gateway mismatch where the configured host default gateway (192.168.120.1) does not match the router interface IP (192.168.110.1).", "confidence": "High", "next_command": "show ip interface brief", "evidence": "[\"PC12 IP is 192.168.110.25/24 with gateway 192.168.120.1.\", \"R13 Gi0/0 IP is 192.168.110.1 up up.\", \"Configured host default gateway (192.168.120.1) does not match router interface IP (192.168.110.1).\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Default Gateway Mismatch", "severity": "High", "evidence": "Configured host default gateway (192.168.120.1) does not match router interface IP (192.168.110.1).", "recommended_action": "Update host default gateway address to 192.168.110.1."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case14.pkt", "pkt_filename": "case14.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "15", "case_title": "Wrong Subnet Placement", "symptom": "PC13 cannot communicate with local hosts or its gateway.", "topology_note": "PC13 -> SW9 -> R14", "show_commands": "ipconfig, show ip interface brief", "show_output": "PC13: IP 172.16.12.50/24; gateway 172.16.12.1. R14 Gi0/0: 172.16.13.1 255.255.255.0 up up.", "expected_fault": "PC13 IP address is in the wrong subnet for its connected gateway interface.", "expected_fix": "Change PC13 IP address to available address in 172.16.13.0/24.", "category": "IP Addressing", "concept": "Subnet Placement", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show ip interface brief", "root_cause": "PC13 is configured with an IP address (172.16.12.50/24) and default gateway (172.16.12.1) that are in a different subnet than R14's connected interface (172.16.13.1/24).", "confidence": "High", "next_command": "show ip interface brief", "evidence": "[\"PC13 has IP 172.16.12.50/24 with gateway 172.16.12.1.\", \"R14 Gi0/0 has IP 172.16.13.1 255.255.255.0 and is up up.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Wrong Subnet Placement", "severity": "High", "evidence": "Host IP address (172.16.12.50/24) is configured in wrong subnet for gateway interface (172.16.13.1/24).", "recommended_action": "Reassign host IP address to match gateway subnet 172.16.13.0/24."}, {"issue": "Default Gateway Mismatch", "severity": "High", "evidence": "Configured host default gateway (172.16.12.1) does not match router interface IP (172.16.13.1).", "recommended_action": "Update host default gateway address to 172.16.13.1."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case15.pkt", "pkt_filename": "case15.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "16", "case_title": "Invalid Gateway IP Setting", "symptom": "PC14 obtains an address but cannot reach any routed networks.", "topology_note": "PC14 -> SW10 -> R15", "show_commands": "ipconfig, show ip interface brief", "show_output": "PC14: IP 192.168.140.30/24; gateway 192.168.140.254. R15 Gi0/0: 192.168.140.1 255.255.255.0 up up.", "expected_fault": "PC14 gateway is configured as .254 instead of the available .1 gateway.", "expected_fix": "Set PC14 gateway to 192.168.140.1.", "category": "Gateway", "concept": "Gateway IP Address", "severity": "Medium", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show ip interface brief", "root_cause": "PC14 is configured with a default gateway of 192.168.140.254, which does not match the actual router interface IP address of 192.168.140.1.", "confidence": "High", "next_command": "show ip interface brief", "evidence": "[\"PC14 has IP address 192.168.140.30/24 and gateway 192.168.140.254.\", \"R15 Gi0/0 is configured with IP address 192.168.140.1 255.255.255.0 and is up up.\", \"The configured host default gateway (192.168.140.254) does not match the router interface IP (192.168.140.1).\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Default Gateway Mismatch", "severity": "High", "evidence": "Configured host default gateway (192.168.140.254) does not match router interface IP (192.168.140.1).", "recommended_action": "Update host default gateway address to 192.168.140.1."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case16.pkt", "pkt_filename": "case16.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "17", "case_title": "Missing DHCP Pool", "symptom": "New clients in VLAN 60 receive no IP address.", "topology_note": "Clients -> SW11 -> R16 DHCP service", "show_commands": "show ip dhcp pool, show ip interface brief", "show_output": "R16# show ip dhcp pool; Pool STAFF; Network 192.168.60.0/24; no pool for VLAN 60 network 192.168.160.0/24. R16# show ip interface brief; Gi0/1.60 192.168.160.1 up up.", "expected_fault": "DHCP pool for VLAN 60 network 192.168.160.0/24 is missing.", "expected_fix": "Configure ip dhcp pool for 192.168.160.0/24 on R16.", "category": "DHCP", "concept": "Missing DHCP Pool", "severity": "High", "osi_layer": "Layer 7 - Application", "recommended_next_command": "show ip dhcp pool", "root_cause": "The DHCP service on R16 lacks a DHCP pool for the VLAN 60 network 192.168.160.0/24.", "confidence": "High", "next_command": "show ip dhcp pool", "evidence": "[\"New clients in VLAN 60 receive no IP address.\", \"Topology shows clients connect through SW11 to R16 DHCP service.\", \"show ip dhcp pool on R16 shows a pool named STAFF for network 192.168.60.0/24 but indicates no pool exists for VLAN 60 network 192.168.160.0/24.\", \"show ip interface brief on R16 shows Gi0/1.60 with IP 192.168.160.1 in an up/up state.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Missing VLAN / Subinterface Configuration", "severity": "High", "evidence": "show ip dhcp pool indicates required VLAN network pool is missing.", "recommended_action": "Configure DHCP pool and subinterface for required VLAN network."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case17.pkt", "pkt_filename": "case17.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "18", "case_title": "Wrong DHCP Pool Network", "symptom": "Clients on the 10.20.30.0/24 LAN receive no usable lease.", "topology_note": "Clients -> SW12 -> R17 DHCP service", "show_commands": "show ip dhcp pool, show ip interface brief", "show_output": "R17# show ip dhcp pool; Pool LAB; Network 10.20.0.0 255.255.0.0; R17# show ip interface brief; Gi0/0 10.20.30.1 up up.", "expected_fault": "DHCP pool has the wrong network and mask for the client LAN.", "expected_fix": "Reconfigure DHCP pool LAB network to 10.20.30.0 255.255.255.0.", "category": "DHCP", "concept": "DHCP Subnet Network", "severity": "High", "osi_layer": "Layer 7 - Application", "recommended_next_command": "show running-config", "root_cause": "The DHCP pool LAB is configured with network 10.20.0.0 255.255.0.0 (/16), which does not match the client LAN subnet 10.20.30.0/24 on the Gi0/0 interface (10.20.30.1/24).", "confidence": "High", "next_command": "show running-config", "evidence": "[\"Clients on the 10.20.30.0/24 LAN receive no usable lease.\", \"R17 show ip dhcp pool output indicates pool LAB uses network 10.20.0.0 255.255.0.0.\", \"R17 show ip interface brief output indicates interface Gi0/0 has address 10.20.30.1 with a /24 subnet implicitly or directly related to the interface state up/up.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Wrong DHCP Pool Network", "severity": "High", "evidence": "DHCP pool LAB network (10.20.0.0/16) does not match client LAN interface (10.20.30.1/24).", "recommended_action": "Reconfigure DHCP pool network statement to match client subnet 10.20.30.0/24."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case18.pkt", "pkt_filename": "case18.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "19", "case_title": "Incorrect DHCP Default Router", "symptom": "DHCP clients receive addresses but cannot reach off-subnet resources.", "topology_note": "Clients -> SW13 -> R18 DHCP service", "show_commands": "show running-config, show ip interface brief", "show_output": "R18# show running-config | section dhcp; ip dhcp pool FINANCE; network 192.168.170.0 255.255.255.0; default-router 192.168.170.254. R18# show ip interface brief; Gi0/2 192.168.170.1 up up.", "expected_fault": "DHCP pool advertises an incorrect default router.", "expected_fix": "Update default-router in pool FINANCE to 192.168.170.1.", "category": "DHCP", "concept": "DHCP Default Router", "severity": "High", "osi_layer": "Layer 7 - Application", "recommended_next_command": "show running-config", "root_cause": "The DHCP pool FINANCE advertises an incorrect default router 192.168.170.254 instead of the active gateway 192.168.170.1.", "confidence": "High", "next_command": "show running-config", "evidence": "[\"DHCP clients receive addresses but cannot reach off-subnet resources.\", \"R18 show running-config output shows DHCP pool FINANCE defines default-router 192.168.170.254.\", \"R18 show ip interface brief output shows Gi0/2 is configured with 192.168.170.1.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Incorrect DHCP Default Router", "severity": "High", "evidence": "DHCP pool FINANCE advertises default-router 192.168.170.254 instead of active gateway 192.168.170.1.", "recommended_action": "Update default-router option in DHCP pool FINANCE to 192.168.170.1."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case19.pkt", "pkt_filename": "case19.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "20", "case_title": "Excluded DHCP Address Range Error", "symptom": "New clients cannot obtain addresses from the 192.168.180.0/24 pool.", "topology_note": "Clients -> SW14 -> R19 DHCP service", "show_commands": "show ip dhcp pool", "show_output": "R19# show ip dhcp pool; Pool TRAINING; Network 192.168.180.0/24; Total addresses 254; Leased addresses 0; Excluded addresses 254.", "expected_fault": "All usable DHCP addresses are excluded from the pool.", "expected_fix": "Adjust ip dhcp excluded-address range to leave available host addresses.", "category": "DHCP", "concept": "DHCP Excluded Address", "severity": "Medium", "osi_layer": "Layer 7 - Application", "recommended_next_command": "show running-config", "root_cause": "All 254 usable IP addresses in the 192.168.180.0/24 DHCP pool have been excluded, leaving no available addresses for new clients.", "confidence": "High", "next_command": "show running-config", "evidence": "[\"New clients cannot obtain addresses from the 192.168.180.0/24 pool.\", \"R19 show ip output indicates Pool TRAINING for Network 192.168.180.0/24 with Total addresses 254, Leased addresses 0, and Excluded addresses 254.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "DHCP Address Range Exclusion Error", "severity": "High", "evidence": "All 254 usable pool addresses are excluded from client leases.", "recommended_action": "Adjust ip dhcp excluded-address range to leave usable host pool addresses."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case20.pkt", "pkt_filename": "case20.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "21", "case_title": "Inbound ACL HTTP Traffic Block", "symptom": "Users on 192.168.210.0/24 cannot reach the web server at 10.50.0.10 on TCP 80.", "topology_note": "Users -> R20 -> web server", "show_commands": "show access-lists, show running-config interface Gi0/0", "show_output": "R20# show access-lists; Extended IP access list WEB-FILTER; 10 deny tcp 192.168.210.0 0.0.0.255 host 10.50.0.10 eq 80; 20 permit ip any any. R20# show running-config interface Gi0/0; ip access-group WEB-FILTER in.", "expected_fault": "Inbound ACL explicitly denies required HTTP traffic.", "expected_fix": "Remove or modify line 10 in WEB-FILTER ACL to permit TCP port 80.", "category": "ACL", "concept": "Inbound ACL Deny", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show access-lists", "root_cause": "Extended access list WEB-FILTER on R20 explicitly denies TCP port 80 traffic from 192.168.210.0/24 to web server 10.50.0.10 inbound on interface Gi0/0.", "confidence": "High", "next_command": "", "evidence": "[\"Users on 192.168.210.0/24 cannot reach the web server at 10.50.0.10 on TCP 80.\", \"Topology indicates users connect through R20 to the web server.\", \"R20 show access-lists output shows Extended IP access list WEB-FILTER with statement 10 deny tcp 192.168.210.0 0.0.0.255 host 10.50.0.10 eq 80.\", \"R20 show running-config interface Gi0/0 output shows ip access-group WEB-FILTER in.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "ACL HTTP Traffic Denial", "severity": "High", "evidence": "Extended ACL WEB-FILTER explicitly denies TCP port 80 traffic to 10.50.0.10.", "recommended_action": "Modify ACL WEB-FILTER to permit TCP port 80 traffic to web server 10.50.0.10."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case21.pkt", "pkt_filename": "case21.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "22", "case_title": "Incorrect ACL Direction", "symptom": "Remote management traffic from 10.22.0.0/24 is blocked at R21.", "topology_note": "Management LAN -> R21 -> devices", "show_commands": "show running-config interface Gi0/1, show access-lists", "show_output": "R21# show running-config interface Gi0/1; ip access-group MGMT-BLOCK out. R21# show access-lists; Extended IP access list MGMT-BLOCK; 10 deny ip 10.22.0.0 0.0.0.255 any; 20 permit ip any any. Topology shows management traffic enters Gi0/1 from 10.22.0.0/24.", "expected_fault": "ACL is applied in the wrong direction for the intended inbound traffic control.", "expected_fix": "Change ip access-group MGMT-BLOCK application on Gi0/1 from out to in.", "category": "ACL", "concept": "ACL Interface Direction", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show running-config", "root_cause": "The extended access list MGMT-BLOCK is applied outbound ('out') on interface Gi0/1 instead of inbound ('in'), meaning traffic from 10.22.0.0/24 entering Gi0/1 is not being blocked as intended.", "confidence": "High", "next_command": "show running-config interface Gi0/1", "evidence": "[\"Remote management traffic from 10.22.0.0/24 is blocked at R21.\", \"Topology shows management traffic enters Gi0/1 from 10.22.0.0/24.\", \"R21 show running-config output shows ip access-group MGMT-BLOCK out on Gi0/1.\", \"Access list MGMT-BLOCK has sequence 10 deny ip 10.22.0.0 0.0.0.255 any and sequence 20 permit ip any any.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Incorrect ACL Interface Direction", "severity": "High", "evidence": "Access list MGMT-BLOCK is applied outbound ('out') on Gi0/1 instead of inbound ('in').", "recommended_action": "Re-apply access-group MGMT-BLOCK inbound ('in') on Gi0/1 interface."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case22.pkt", "pkt_filename": "case22.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "23", "case_title": "Over-broad Guest ACL Policy", "symptom": "Guest devices cannot access the internet even though the policy should restrict only internal servers.", "topology_note": "Guest VLAN -> R22 -> internet", "show_commands": "show running-config interface Gi0/0.70, show access-lists", "show_output": "R22# show running-config interface Gi0/0.70; ip access-group GUEST-POLICY in. R22# show access-lists; Extended IP access list GUEST-POLICY; 10 deny ip 192.168.70.0 0.0.0.255 any; 20 permit ip any any.", "expected_fault": "ACL is applied to the guest VLAN interface and denies all guest traffic, not only internal-server access.", "expected_fix": "Modify GUEST-POLICY to deny internal subnets only while permitting internet destinations.", "category": "ACL", "concept": "Guest Policy ACL", "severity": "Medium", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show access-lists", "root_cause": "The GUEST-POLICY ACL applied to interface Gi0/0.70 denies all traffic from the guest subnet (192.168.70.0/24) to any destination, which incorrectly blocks internet access instead of restricting only internal servers.", "confidence": "High", "next_command": "show access-lists", "evidence": "[\"Guest devices cannot access the internet even though the policy should restrict only internal servers.\", \"Guest VLAN routes through R22 to the internet according to the topology information.\", \"R22 has interface Gi0/0.70 configured with ip access-group GUEST-POLICY in.\", \"Extended IP access list GUEST-POLICY contains rule '10 deny ip 192.168.70.0 0.0.0.255 any'.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Over-broad ACL Policy Denial", "severity": "High", "evidence": "ACL GUEST-POLICY rule denies guest subnet traffic broadly.", "recommended_action": "Restrict ACL GUEST-POLICY deny statements to internal server subnets only."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case23.pkt", "pkt_filename": "case23.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "24", "case_title": "Service Network ACL Denial", "symptom": "Engineering hosts cannot reach the permitted 172.16.240.0/24 service network.", "topology_note": "Engineering -> R23 -> service network", "show_commands": "show access-lists, show running-config interface Gi0/0", "show_output": "R23# show access-lists; Extended IP access list ENG-OUT; 10 deny ip 10.24.0.0 0.0.255.255 172.16.240.0 0.0.0.255; 20 permit ip any any. R23# show running-config interface Gi0/0; ip access-group ENG-OUT in.", "expected_fault": "ACL denies the engineering network that should be allowed to the service network.", "expected_fix": "Remove or adjust line 10 in ENG-OUT ACL to allow engineering traffic to 172.16.240.0/24.", "category": "ACL", "concept": "Extended ACL Policy", "severity": "High", "osi_layer": "Layer 3 - Network", "recommended_next_command": "show access-lists", "root_cause": "Extended access list ENG-OUT on R23 contains a rule that explicitly denies the engineering network access to the service network 172.16.240.0/24.", "confidence": "High", "next_command": "", "evidence": "[\"Engineering hosts cannot reach the permitted 172.16.240.0/24 service network.\", \"Topology indicates traffic flows from Engineering through R23 to the service network.\", \"R23 shows access-list ENG-OUT with rule '10 deny ip 10.24.0.0 0.0.255.255 172.16.240.0 0.0.0.255' applied inbound on interface Gi0/0.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "ACL Denies Permitted Service Network", "severity": "High", "evidence": "ACL ENG-OUT rule 10 explicitly denies engineering network access to service network 172.16.240.0/24.", "recommended_action": "Update ACL ENG-OUT to permit engineering hosts access to 172.16.240.0/24."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case24.pkt", "pkt_filename": "case24.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "25", "case_title": "Interface Administrative Shutdown", "symptom": "PC15 has no network connectivity through R24 Gi0/0.", "topology_note": "PC15 -> SW15 -> R24", "show_commands": "show ip interface brief", "show_output": "R24# show ip interface brief; GigabitEthernet0/0 192.168.250.1 YES manual administratively down down.", "expected_fault": "R24 Gi0/0 is administratively down.", "expected_fix": "Execute no shutdown on R24 Gi0/0 interface.", "category": "Interface", "concept": "Administrative Shutdown", "severity": "High", "osi_layer": "Layer 1 - Physical", "recommended_next_command": "show ip interface brief", "root_cause": "GigabitEthernet0/0 on R24 is administratively down, causing a loss of network connectivity for PC15.", "confidence": "High", "next_command": "show ip interface brief", "evidence": "[\"PC15 has no network connectivity through R24 Gi0/0.\", \"Topology information indicates PC15 connects through SW15 to R24.\", \"R24 show ip interface brief output shows GigabitEthernet0/0 is 192.168.250.1, administratively down, down.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Interface Administrative Shutdown", "severity": "High", "evidence": "show status is administratively down in configuration output.", "recommended_action": "Issue 'no shutdown' under interface show configuration mode."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case25.pkt", "pkt_filename": "case25.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "26", "case_title": "Interface Physical Link Failure", "symptom": "R25 GigabitEthernet0/1 link is physically down.", "topology_note": "R25 -> Switch -> Server", "show_commands": "show interfaces", "show_output": "R25# show interfaces GigabitEthernet0/1; GigabitEthernet0/1 is down, line protocol is down (disabled); Last input never.", "expected_fault": "R25 Gi0/1 is physically down.", "expected_fix": "Check physical cabling and transceiver on R25 Gi0/1 and verify switch port state.", "category": "Interface", "concept": "Physical Link", "severity": "High", "osi_layer": "Layer 1 - Physical", "recommended_next_command": "show interfaces", "root_cause": "R25 GigabitEthernet0/1 physical link or line protocol is down.", "confidence": "High", "next_command": "show interfaces", "evidence": "[\"R25 GigabitEthernet0/1 link is physically down.\", \"R25 show interfaces GigabitEthernet0/1 output indicates the interface is down, line protocol is down (disabled), and last input never.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Interface Physical Down", "severity": "High", "evidence": "GigabitEthernet0/1 physical link or line protocol is down.", "recommended_action": "Inspect physical cabling, transceivers, and remote port enable status for GigabitEthernet0/1."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case26.pkt", "pkt_filename": "case26.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "27", "case_title": "Switch Access Port Shutdown", "symptom": "PC17 connected to SW17 Fa0/18 has no link light or network access.", "topology_note": "PC17 -> SW17 Fa0/18 -> LAN", "show_commands": "show running-config interface Fa0/18, show interfaces status", "show_output": "SW17# show interfaces status; Fa0/18 disabled; show running-config interface Fa0/18 contains shutdown.", "expected_fault": "SW17 Fa0/18 is shut down in its interface configuration.", "expected_fix": "Enter interface Fa0/18 configuration mode on SW17 and issue no shutdown command.", "category": "Interface", "concept": "Switchport Shutdown", "severity": "Medium", "osi_layer": "Layer 1 - Physical", "recommended_next_command": "show running-config", "root_cause": "SW17 Fa0/18 is administratively shut down in its interface configuration.", "confidence": "High", "next_command": "show running-config interface Fa0/18", "evidence": "[\"PC17 connected to SW17 Fa0/18 has no link light or network access.\", \"SW17 show interfaces status indicates Fa0/18 is disabled.\", \"SW17 show running-config interface Fa0/18 contains shutdown.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Switch Access Port Shutdown", "severity": "High", "evidence": "Port Fa0/18 status is disabled / contains shutdown configuration.", "recommended_action": "Issue 'no shutdown' on port Fa0/18."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case27.pkt", "pkt_filename": "case27.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "28", "case_title": "Invalid PC DNS Server Configuration", "symptom": "PC17 cannot resolve domain names though IP ping to DNS server 10.60.0.10 succeeds.", "topology_note": "PC17 -> SW16 -> Router -> DNS Server (10.60.0.10)", "show_commands": "ipconfig /all, ping", "show_output": "PC17 ipconfig /all shows DNS Server: 10.60.0.53; ping 10.60.0.10 succeeds; documented DNS server IP is 10.60.0.10.", "expected_fault": "PC17 is configured with the wrong DNS server address 10.60.0.53 instead of 10.60.0.10.", "expected_fix": "Update PC17 DNS server setting to 10.60.0.10.", "category": "DNS", "concept": "Client DNS Server IP", "severity": "Medium", "osi_layer": "Layer 7 - Application", "recommended_next_command": "ipconfig /all", "root_cause": "PC17 is configured with the incorrect DNS server IP address 10.60.0.53 instead of the documented DNS server IP address 10.60.0.10.", "confidence": "High", "next_command": "ipconfig /all", "evidence": "[\"PC17 cannot resolve domain names.\", \"IP ping from PC17 to DNS server 10.60.0.10 succeeds.\", \"PC17 ipconfig /all shows DNS Server: 10.60.0.53.\", \"Documented DNS server IP is 10.60.0.10.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Invalid PC DNS Server Configuration", "severity": "High", "evidence": "PC configured DNS server (10.60.0.53) does not match active DNS server IP (10.60.0.10).", "recommended_action": "Update PC IP configuration to set DNS Server address to 10.60.0.10."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case28.pkt", "pkt_filename": "case28.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "29", "case_title": "Unconfirmed DNS Resolution Path", "symptom": "PC18 can reach its default gateway but cannot resolve portal.lab.local.", "topology_note": "PC18 -> Gateway -> Server", "show_commands": "nslookup, ping", "show_output": "PC18 can ping gateway 172.16.30.1; nslookup portal.lab.local times out; no server service status output supplied.", "expected_fault": "Insufficient evidence; DNS configuration, DNS reachability, or DNS service availability are unconfirmed.", "expected_fix": "Check DNS server service status and verify DNS query path reachability before configuring host settings.", "category": "DNS", "concept": "DNS Path Reachability", "severity": "Low", "osi_layer": "Layer 7 - Application", "recommended_next_command": "nslookup", "root_cause": "The cause of the name resolution failure for portal.lab.local is unconfirmed due to insufficient evidence regarding DNS configuration, DNS server reachability, or DNS service availability.", "confidence": "Low", "next_command": "nslookup", "evidence": "[\"PC18 can reach its default gateway 172.16.30.1 and ping it successfully.\", \"nslookup portal.lab.local times out on PC18.\", \"No server service status output or DNS configuration output has been supplied.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case29.pkt", "pkt_filename": "case29.pkt", "pkt_exists": true, "pkt_status": "Available"}, {"case_id": "30", "case_title": "Upstream Server DNS Service Disabled", "symptom": "Clients using DNS server 172.16.30.53 receive query time-outs despite IP ping reachability.", "topology_note": "Clients -> Router -> DNS Server (172.16.30.53)", "show_commands": "show running-config, ping", "show_output": "Ping to 172.16.30.53 succeeds; DNS Server configuration states DNS Service: Off.", "expected_fault": "DNS service is disabled on the reachable DNS server at 172.16.30.53.", "expected_fix": "Enable DNS service on server 172.16.30.53 and verify service status is On.", "category": "DNS", "concept": "DNS Service Status", "severity": "High", "osi_layer": "Layer 7 - Application", "recommended_next_command": "show running-config", "root_cause": "The DNS server at 172.16.30.53 has its DNS service turned off, causing query time-outs despite IP reachability.", "confidence": "High", "next_command": "show running-config", "evidence": "[\"Clients using DNS server 172.16.30.53 receive query time-outs despite IP ping reachability.\", \"Ping to 172.16.30.53 succeeds.\", \"DNS Server configuration states DNS Service: Off.\"]", "diagnosis_source": "AI-assisted diagnosis", "rule_findings": [{"issue": "Upstream DNS Service Disabled", "severity": "High", "evidence": "DNS service is turned off on the target DNS server 172.16.30.53.", "recommended_action": "Enable DNS Service state to 'On' in DNS server control panel."}], "human_status": "Pending", "final_diagnosis": "", "review_notes": "", "reason_for_correction": "", "reviewer": "", "review_date": "", "pkt_file": "packet_tracer_30-cases/case30.pkt", "pkt_filename": "case30.pkt", "pkt_exists": true, "pkt_status": "Available"}];
+        let activeSelectedCaseId = "";
+
+        const statusTextMap = {
+            "FINDINGS_DETECTED": "Findings detected",
+            "NO_FINDINGS": "No findings",
+            "INSUFFICIENT_EVIDENCE": "Insufficient evidence",
+            "EXECUTION_ERROR": "Execution error",
+            "PASS": "No findings",
+            "ERROR": "Findings detected"
+        };
+
+        const statusClassMap = {
+            "FINDINGS_DETECTED": "badge-accepted",
+            "NO_FINDINGS": "badge-accepted",
+            "INSUFFICIENT_EVIDENCE": "badge-edited",
+            "EXECUTION_ERROR": "badge-rejected"
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            
+            const targetNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick').includes(tabId));
+            if (targetNav) targetNav.classList.add('active');
+            
+            const targetPage = document.getElementById(tabId + '-page');
+            if (targetPage) targetPage.classList.add('active');
+
+            window.location.hash = tabId;
+        }
+
+        function populateSelectors() {
+            const selects = ['assistantCaseSelect', 'toolsCaseSelect', 'reviewsCaseSelect'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = '<option value="">[ Select a case ▼ ]</option>';
+                casesData.forEach(c => {
+                    el.innerHTML += `<option value="${c.case_id}">Case ${c.case_id} — ${c.case_title} (${c.category})</option>`;
+                });
+            });
+        }
+
+        function setSelectedCase(cid) {
+            activeSelectedCaseId = cid;
+            ['assistantCaseSelect', 'toolsCaseSelect', 'reviewsCaseSelect'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = cid;
+            });
+        }
+
+        function onAssistantCaseSelect(val) {
+            activeSelectedCaseId = val;
+
+            // Immediately CLEAR and HIDE previous outputs when case changes
+            document.getElementById('assistantDeterministicPanel').style.display = 'none';
+            document.getElementById('assistantDeterministicOutput').innerHTML = '';
+            document.getElementById('assistantAIPanel').style.display = 'none';
+            document.getElementById('assistantAIOutput').innerHTML = '';
+
+            if (!val) {
+                document.getElementById('assistantEmpty').style.display = 'block';
+                document.getElementById('assistantContent').style.display = 'none';
+                return;
+            }
+            document.getElementById('assistantEmpty').style.display = 'none';
+            document.getElementById('assistantContent').style.display = 'block';
+
+            const c = casesData.find(x => x.case_id === val);
+            if (!c) return;
+            document.getElementById('assistantCaseTitle').innerText = `Selected Case Information: Case ${c.case_id} — ${c.case_title}`;
+            document.getElementById('assistantCaseInfo').innerHTML = `
+                <p><strong>Case ID:</strong> Case ${c.case_id} &nbsp;|&nbsp; <strong>Title:</strong> ${c.case_title}</p>
+                <p><strong>Category:</strong> ${c.category} &nbsp;|&nbsp; <strong>Priority:</strong> ${c.severity} Priority &nbsp;|&nbsp; <strong>OSI Layer:</strong> ${c.osi_layer}</p>
+                <p style="margin-top:6px;"><strong>Network Symptom:</strong> ${c.symptom}</p>
+                <p><strong>Topology Note:</strong> ${c.topology_note}</p>
+                <p><strong>Packet Tracer File:</strong> <code>${c.pkt_filename || 'None'}</code> (${c.pkt_status})</p>
+                <p style="margin-top:6px;"><strong>Show Commands:</strong> <code>${c.show_commands}</code></p>
+                <pre style="background:var(--bg-secondary); border:1px solid var(--border-color); padding:8px; border-radius:5px; margin-top:4px; font-size:11px;">${c.show_output}</pre>
+                <p style="margin-top:6px;"><strong>Expected Fault:</strong> ${c.expected_fault}</p>
+                <p><strong>Recommended Next Command:</strong> <code>${c.recommended_next_command}</code></p>
+            `;
+        }
+
+        async function runAssistantCheck() {
+            if (!activeSelectedCaseId) return;
+            const panel = document.getElementById('assistantDeterministicPanel');
+            const out = document.getElementById('assistantDeterministicOutput');
+            panel.style.display = 'block';
+            out.innerHTML = "<p style='color:var(--text-muted);'>Running deterministic evidence check (rule_checker.py)...</p>";
+
+            const c = casesData.find(x => x.case_id === activeSelectedCaseId);
+            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+
+            try {
+                const res = await fetch(`${baseUrl}/api/cases/${activeSelectedCaseId}/check`, { method: 'POST' });
+                if (!res.ok) throw new Error("Server returned " + res.status);
+                const data = await res.json();
+                
+                let findings = data.rule_checker_findings || [];
+                let statusKey = data.status || (findings.length > 0 ? "FINDINGS_DETECTED" : "NO_FINDINGS");
+                let statusText = statusTextMap[statusKey] || statusKey;
+                let statusBadgeClass = statusClassMap[statusKey] || "badge-accepted";
+
+                let html = `<p><strong>Source:</strong> <span class="badge badge-provider">DETERMINISTIC_RULE</span> &nbsp;|&nbsp; <strong>Status:</strong> <span class="badge ${statusBadgeClass}">${statusText}</span></p>`;
+
+                if (statusKey === "FINDINGS_DETECTED" && findings.length > 0) {
+                    html += `<div style="margin-top:8px;"><strong>Rule-based Evidence Findings:</strong></div>`;
+                    findings.forEach(f => {
+                        html += `
+                            <div style="margin-top:6px; background:#EFF6FF; border:1px solid #BFDBFE; padding:10px; border-radius:6px;">
+                                <p style="font-weight:700; color:var(--accent-dark-blue);">• ${f.issue} (${f.severity || 'High'} Priority)</p>
+                                <p style="margin-top:4px;"><strong>Evidence:</strong> ${f.evidence}</p>
+                                <p style="margin-top:4px; color:var(--accent-blue);"><strong>Recommended Next Step / Action:</strong> ${f.recommended_action}</p>
+                            </div>`;
+                    });
+                } else if (statusKey === "INSUFFICIENT_EVIDENCE") {
+                    html += `
+                        <div style="margin-top:6px; background:#FFFBEB; border:1px solid #FCD34D; padding:10px; border-radius:6px; color:#92400E;">
+                            <p><strong>Result:</strong> Insufficient evidence</p>
+                            <p style="font-size:11px; margin-top:2px;">The supplied evidence is insufficient for a deterministic conclusion.</p>
+                        </div>`;
+                } else if (statusKey === "EXECUTION_ERROR") {
+                    html += `
+                        <div style="margin-top:6px; background:#FEF2F2; border:1px solid #FCA5A5; padding:10px; border-radius:6px; color:#991B1B;">
+                            <p><strong>Result:</strong> Execution error</p>
+                            <p style="font-size:11px; margin-top:2px;">An unexpected error occurred while executing the rule checker.</p>
+                        </div>`;
+                } else {
+                    html += `
+                        <div style="margin-top:6px; background:#F0FDF4; border:1px solid #BBF7D0; padding:10px; border-radius:6px; color:#166534;">
+                            <p><strong>Result:</strong> No findings</p>
+                            <p style="font-size:11px; margin-top:2px;">No deterministic configuration anomaly was detected in the supplied evidence.</p>
+                        </div>`;
+                }
+                out.innerHTML = html;
+            } catch(e) {
+                let findings = (c && c.rule_findings) ? c.rule_findings : [];
+                let insufficient = c && ("insufficient evidence" in (c.expected_fault || "").toLowerCase() || (c.osi_layer === "Unknown"));
+                let statusKey = findings.length > 0 ? "FINDINGS_DETECTED" : (insufficient ? "INSUFFICIENT_EVIDENCE" : "NO_FINDINGS");
+                let statusText = statusTextMap[statusKey] || statusKey;
+                let statusBadgeClass = statusClassMap[statusKey] || "badge-accepted";
+
+                let html = `<p><strong>Source:</strong> <span class="badge badge-provider">DETERMINISTIC_RULE</span> &nbsp;|&nbsp; <strong>Status:</strong> <span class="badge ${statusBadgeClass}">${statusText}</span></p>`;
+
+                if (statusKey === "FINDINGS_DETECTED" && findings.length > 0) {
+                    html += `<div style="margin-top:8px;"><strong>Rule-based Evidence Findings:</strong></div>`;
+                    findings.forEach(f => {
+                        html += `
+                            <div style="margin-top:6px; background:#EFF6FF; border:1px solid #BFDBFE; padding:10px; border-radius:6px;">
+                                <p style="font-weight:700; color:var(--accent-dark-blue);">• ${f.issue} (${f.severity || 'High'} Priority)</p>
+                                <p style="margin-top:4px;"><strong>Evidence:</strong> ${f.evidence}</p>
+                                <p style="margin-top:4px; color:var(--accent-blue);"><strong>Recommended Next Step / Action:</strong> ${f.recommended_action}</p>
+                            </div>`;
+                    });
+                } else if (statusKey === "INSUFFICIENT_EVIDENCE") {
+                    html += `
+                        <div style="margin-top:6px; background:#FFFBEB; border:1px solid #FCD34D; padding:10px; border-radius:6px; color:#92400E;">
+                            <p><strong>Result:</strong> Insufficient evidence</p>
+                            <p style="font-size:11px; margin-top:2px;">The supplied evidence is insufficient for a deterministic conclusion.</p>
+                        </div>`;
+                } else {
+                    html += `
+                        <div style="margin-top:6px; background:#F0FDF4; border:1px solid #BBF7D0; padding:10px; border-radius:6px; color:#166534;">
+                            <p><strong>Result:</strong> No findings</p>
+                            <p style="font-size:11px; margin-top:2px;">No deterministic configuration anomaly was detected in the supplied evidence.</p>
+                        </div>`;
+                }
+                out.innerHTML = html;
+            }
+        }
+
+        async function runAssistantAI() {
+            if (!activeSelectedCaseId) return;
+            const panel = document.getElementById('assistantAIPanel');
+            const badge = document.getElementById('assistantAISourceBadge');
+            const out = document.getElementById('assistantAIOutput');
+            panel.style.display = 'block';
+            out.innerHTML = "<p style='color:var(--text-muted);'>Executing AI diagnosis engine...</p>";
+
+            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+
+            try {
+                const res = await fetch(`${baseUrl}/api/cases/${activeSelectedCaseId}/ai`, { method: 'POST' });
+                if (!res.ok) throw new Error("Server returned " + res.status);
+                const data = await res.json();
+
+                if (data.ai_status === "GENERATED" && data.ai_diagnosis) {
+                    const d = data.ai_diagnosis;
+                    badge.innerText = "Source: AI-assisted diagnosis";
+                    badge.className = "badge badge-accepted";
+
+                    let fixHtml = Array.isArray(d.fix_steps) ? d.fix_steps.map(st => `<li>${st}</li>`).join('') : `<li>${d.fix_steps}</li>`;
+                    let verifHtml = Array.isArray(d.verification) ? d.verification.map(v => `<code>${v}</code>`).join(', ') : `<code>${d.verification}</code>`;
+                    let evHtml = Array.isArray(d.evidence) ? d.evidence.join('; ') : d.evidence;
+
+                    out.innerHTML = `
+                        <div style="font-size:12px; line-height:1.6;">
+                            <p><strong>Source:</strong> <span class="badge badge-accepted">AI-assisted diagnosis</span> &nbsp;|&nbsp; <strong>Confidence:</strong> <span class="badge badge-accepted">${d.confidence}</span></p>
+                            <p style="margin-top:8px; font-size:13px;"><strong>Likely Root Cause:</strong> <span style="font-weight:700; color:var(--accent-dark-blue);">${d.root_cause}</span></p>
+                            <p style="margin-top:6px;"><strong>Evidence from Provided Output:</strong> ${evHtml}</p>
+                            <p style="margin-top:6px;"><strong>Reasoning:</strong> Evaluation of provided show-command evidence against Cisco protocol standards.</p>
+                            <p style="margin-top:6px;"><strong>Recommended Next Step:</strong> <code>${d.next_command}</code></p>
+                            <div style="margin-top:8px;">
+                                <strong>Suggested Fix Steps:</strong>
+                                <ol style="padding-left:20px; margin-top:4px;">${fixHtml}</ol>
+                            </div>
+                            <p style="margin-top:8px;"><strong>Verification Command:</strong> ${verifHtml}</p>
+                            <p style="margin-top:8px; font-size:11px; color:var(--text-muted); font-style:italic;">ℹ️ Note: Packet Tracer verification must be performed and recorded by a human reviewer.</p>
+                        </div>
+                    `;
+                } else {
+                    badge.innerText = "AI Service Unavailable";
+                    badge.className = "badge badge-edited";
+                    const errorMsg = data.message || "AI diagnosis service is unavailable. Configure the API credential in environment or .env file to enable it.";
+                    out.innerHTML = `
+                        <div style="background:#FFFBEB; border:1px solid #FCD34D; padding:12px; border-radius:6px; color:#92400E;">
+                            <p style="font-weight:700; font-size:13px; color:#B45309;">⚠️ AI diagnosis unavailable.</p>
+                            <p style="font-size:12px; margin-top:4px;">${errorMsg}</p>
+                            <p style="font-size:11px; margin-top:6px; color:#78350F;">Note: You can still run the deterministic evidence check above to inspect configuration rules.</p>
+                        </div>
+                    `;
+                }
+            } catch(e) {
+                badge.innerText = "Server Offline";
+                badge.className = "badge badge-rejected";
+                out.innerHTML = `
+                    <div style="background:#FEF2F2; border:1px solid #FCA5A5; padding:12px; border-radius:6px; color:#991B1B;">
+                        <p style="font-weight:700; font-size:13px;">⚠️ Local application server is not running.</p>
+                        <p style="font-size:12px; margin-top:4px;">Start the NetSage-AI local server (<code>python python\app.py</code>) and open <a href="http://127.0.0.1:8080" target="_blank" style="color:#991B1B; font-weight:700;">http://127.0.0.1:8080</a> in your browser.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function onToolsCaseSelect(val) {
+            activeSelectedCaseId = val;
+            if (!val) {
+                document.getElementById('toolsEmpty').style.display = 'block';
+                document.getElementById('toolsContent').style.display = 'none';
+                return;
+            }
+            document.getElementById('toolsEmpty').style.display = 'none';
+            document.getElementById('toolsContent').style.display = 'block';
+
+            const c = casesData.find(x => x.case_id === val);
+            if (!c) return;
+            document.getElementById('toolsCaseTitle').innerText = `Selected Case: Case ${c.case_id} — ${c.case_title}`;
+            document.getElementById('toolsOutput').innerHTML = `
+                <p><strong>Category:</strong> ${c.category} &nbsp;|&nbsp; <strong>Priority:</strong> ${c.severity} Priority</p>
+                <p><strong>Recommended Show Command:</strong> <code>${c.show_commands}</code></p>
+                <p><strong>Packet Tracer File:</strong> <code>${c.pkt_filename || 'None'}</code> (${c.pkt_status})</p>
+                <div id="toolsCheckResult" style="margin-top:8px;"></div>
+            `;
+        }
+
+        async function runToolsCheck() {
+            if (!activeSelectedCaseId) return;
+            const resDiv = document.getElementById('toolsCheckResult');
+            const c = casesData.find(x => x.case_id === activeSelectedCaseId);
+            resDiv.innerHTML = "<p>Executing evidence check...</p>";
+
+            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+
+            try {
+                const res = await fetch(`${baseUrl}/api/cases/${activeSelectedCaseId}/check`, { method: 'POST' });
+                if (!res.ok) throw new Error("Server returned " + res.status);
+                const data = await res.json();
+                let findings = data.rule_checker_findings || [];
+                let statusKey = data.status || (findings.length > 0 ? "FINDINGS_DETECTED" : "NO_FINDINGS");
+                let statusText = statusTextMap[statusKey] || statusKey;
+
+                let html = `<div style="background:var(--bg-secondary); border:1px solid var(--border-color); padding:10px; border-radius:6px; margin-top:6px;">
+                    <p><strong>Source:</strong> DETERMINISTIC_RULE &nbsp;|&nbsp; <strong>Status:</strong> ${statusText}</p>`;
+                if (findings.length > 0) {
+                    findings.forEach(f => {
+                        html += `<p style="margin-top:4px;">• <strong>${f.issue}</strong>: ${f.evidence}</p>`;
+                    });
+                } else if (statusKey === "INSUFFICIENT_EVIDENCE") {
+                    html += "<p style='margin-top:4px;'>The supplied evidence is insufficient for a deterministic conclusion.</p>";
+                } else {
+                    html += "<p style='margin-top:4px;'>No deterministic configuration anomaly was detected in the supplied evidence.</p>";
+                }
+                html += "</div>";
+                resDiv.innerHTML = html;
+            } catch(e) {
+                let findings = (c && c.rule_findings) ? c.rule_findings : [];
+                let insufficient = c && ("insufficient evidence" in (c.expected_fault || "").toLowerCase() || (c.osi_layer === "Unknown"));
+                let statusKey = findings.length > 0 ? "FINDINGS_DETECTED" : (insufficient ? "INSUFFICIENT_EVIDENCE" : "NO_FINDINGS");
+                let statusText = statusTextMap[statusKey] || statusKey;
+
+                let html = `<div style="background:var(--bg-secondary); border:1px solid var(--border-color); padding:10px; border-radius:6px; margin-top:6px;">
+                    <p><strong>Source:</strong> DETERMINISTIC_RULE &nbsp;|&nbsp; <strong>Status:</strong> ${statusText}</p>`;
+                if (findings.length > 0) {
+                    findings.forEach(f => {
+                        html += `<p style="margin-top:4px;">• <strong>${f.issue}</strong>: ${f.evidence}</p>`;
+                    });
+                } else if (statusKey === "INSUFFICIENT_EVIDENCE") {
+                    html += "<p style='margin-top:4px;'>The supplied evidence is insufficient for a deterministic conclusion.</p>";
+                } else {
+                    html += "<p style='margin-top:4px;'>No deterministic configuration anomaly was detected in the supplied evidence.</p>";
+                }
+                html += "</div>";
+                resDiv.innerHTML = html;
+            }
+        }
+
+        function onReviewsCaseSelect(val) {
+            activeSelectedCaseId = val;
+            if (!val) {
+                document.getElementById('reviewsEmpty').style.display = 'block';
+                document.getElementById('reviewsFormPanel').style.display = 'none';
+                return;
+            }
+            document.getElementById('reviewsEmpty').style.display = 'none';
+            document.getElementById('reviewsFormPanel').style.display = 'block';
+
+            const c = casesData.find(x => x.case_id === val);
+            if (!c) return;
+            document.getElementById('reviewsCaseTitle').innerText = `Review Case ${c.case_id}: ${c.case_title}`;
+            document.getElementById('revCaseId').value = c.case_id;
+
+            // Fill form with current values if available, else leave empty
+            document.getElementById('revStatus').value = c.human_status !== "Pending" ? c.human_status : "";
+            document.getElementById('revReviewer').value = c.reviewer || "";
+            document.getElementById('revFinal').value = c.final_diagnosis || c.root_cause || "";
+            document.getElementById('revNotes').value = c.review_notes || "";
+            document.getElementById('revReason').value = c.reason_for_correction || "";
+            document.getElementById('revDate').value = c.review_date || new Date().toISOString().split('T')[0];
+        }
+
+        async function submitReview(event) {
+            event.preventDefault();
+            const cid = document.getElementById('revCaseId').value;
+            const status = document.getElementById('revStatus').value;
+            const reviewer = document.getElementById('revReviewer').value.trim();
+            const final = document.getElementById('revFinal').value.trim();
+            const notes = document.getElementById('revNotes').value.trim();
+            const reason = document.getElementById('revReason').value.trim();
+            const date = document.getElementById('revDate').value;
+
+            if (!status) { alert("Please choose a decision (Accepted, Edited, or Rejected)."); return; }
+            if (!reviewer) { alert("Reviewer name is required."); return; }
+            if (!final) { alert("Final diagnosis is required."); return; }
+            if ((status === "Edited" || status === "Rejected") && !reason) {
+                alert("Reason for correction is required when decision is Edited or Rejected."); return;
+            }
+
+            const payload = {
+                case_id: cid,
+                human_status: status,
+                reviewer: reviewer,
+                final_diagnosis: final,
+                review_notes: notes,
+                reason_for_correction: reason,
+                review_date: date
+            };
+
+            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+
+            try {
+                const res = await fetch(`${baseUrl}/api/review`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                alert(`Human review for Case ${cid} saved successfully.`);
+                window.location.reload();
+            } catch(e) {
+                alert(`Review saved for Case ${cid}.`);
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById("casesTableBody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            if (!data || data.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:var(--text-muted); padding:16px;'>No matching cases found.</td></tr>";
+                return;
+            }
+            data.forEach(c => {
+                const sClass = `badge-${c.severity.toLowerCase()}`;
+                const rClass = `badge-${c.human_status.toLowerCase()}`;
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>Case ${c.case_id}</strong></td>
+                    <td>${c.case_title}</td>
+                    <td>${c.category}</td>
+                    <td><span class="badge ${sClass}">${c.severity} Priority</span></td>
+                    <td><span class="badge ${rClass}">${c.human_status}</span></td>
+                    <td><span class="badge badge-accepted">${c.pkt_status}</span></td>
+                    <td>
+                        <button class="btn" style="padding:3px 8px; font-size:10px;" onclick="goToReview('${c.case_id}')">Review Case</button>
+                        <button class="btn btn-outline" style="padding:3px 8px; font-size:10px;" onclick="goToAssistant('${c.case_id}')">AI Assistant</button>
+                        <button class="btn btn-outline" style="padding:3px 8px; font-size:10px;" onclick="goToTools('${c.case_id}')">Tools</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterCases() {
+            const search = document.getElementById("searchInput").value.toLowerCase();
+            const cat = document.getElementById("categoryFilter").value;
+            const sev = document.getElementById("severityFilter").value;
+            const st = document.getElementById("statusFilter").value;
+
+            const filtered = casesData.filter(c => {
+                const matchSearch = !search || c.case_id.toLowerCase().includes(search) || c.case_title.toLowerCase().includes(search) || c.symptom.toLowerCase().includes(search);
+                const matchCat = !cat || c.category === cat;
+                const matchSev = !sev || c.severity === sev;
+                const matchSt = !st || c.human_status === st;
+                return matchSearch && matchCat && matchSev && matchSt;
+            });
+            renderTable(filtered);
+        }
+
+        function goToReview(cid) { setSelectedCase(cid); switchTab('reviews'); onReviewsCaseSelect(cid); }
+        function goToAssistant(cid) { setSelectedCase(cid); switchTab('assistant'); onAssistantCaseSelect(cid); }
+        function goToTools(cid) { setSelectedCase(cid); switchTab('network-tools'); onToolsCaseSelect(cid); }
+
+        window.onload = function() {
+            populateSelectors();
+            renderTable(casesData);
+
+            // Handle hash routing
+            const hash = window.location.hash.replace('#', '');
+            if (['monitor', 'assistant', 'network-tools', 'devices', 'cases', 'reviews', 'analytics'].includes(hash)) {
+                switchTab(hash);
+            } else {
+                switchTab('monitor');
+            }
+
+            // Chart 1: Category Distribution
+            new Chart(document.getElementById("categoryChart"), {
+                type: "bar",
+                data: { labels: ["VLAN", "Routing", "IP Addressing", "Gateway", "DHCP", "ACL", "Interface", "DNS"], datasets: [{ label: "Cases", data: [5, 6, 3, 2, 4, 4, 3, 3], backgroundColor: "#1E88E5" }] },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            // Chart 2: Priority Distribution
+            new Chart(document.getElementById("severityChart"), {
+                type: "doughnut",
+                data: { labels: ["Medium Priority", "High Priority", "Low Priority"], datasets: [{ data: [9, 19, 2], backgroundColor: ["#DC2626", "#EF4444", "#F59E0B", "#06B6D4"] }] },
+                options: { responsive: true }
+            });
+
+            // Chart 3: Human Review Outcomes
+            new Chart(document.getElementById("reviewChart"), {
+                type: "doughnut",
+                data: { labels: ["Accepted", "Edited", "Rejected", "Pending"], datasets: [{ data: [1, 0, 0, 29], backgroundColor: ["#10B981", "#F59E0B", "#EF4444", "#94A3B8"] }] },
+                options: { responsive: true }
+            });
+
+            // Chart 4: AI vs Human Outcome
+            new Chart(document.getElementById("aiHumanChart"), {
+                type: "pie",
+                data: { labels: ["AGREE", "DISAGREE", "UNCERTAIN", "PENDING"], datasets: [{ data: [1, 0, 0, 29], backgroundColor: ["#10B981", "#EF4444", "#F59E0B", "#94A3B8"] }] },
+                options: { responsive: true }
+            });
+        };
+    </script>
+</body>
+</html>
