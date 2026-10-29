@@ -141,10 +141,10 @@
             <p>Network Operations Center & AI-vs-Human Troubleshooting Console</p>
         </div>
         <div class="header-badges">
-            <div class="badge-status badge-online"><span class="dot dot-green"></span> MODE: 🟢 SYSTEM ONLINE</div>
+            <div class="badge-status badge-online"><span class="dot dot-green"></span> MODE: SYSTEM ONLINE</div>
             <div class="badge-status badge-provider">AI SERVICE: CONFIGURED</div>
             <div class="badge-status badge-provider">DATASET: 30 / 30 Cases</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Updated: <strong>22 Oct 2026, 12:48</strong></div>
+            <div style="font-size: 11px; color: var(--text-muted);">Updated: <strong>29 Oct 2026, 09:55</strong></div>
         </div>
     </div>
 
@@ -1014,7 +1014,7 @@
             out.innerHTML = "<p style='color:var(--text-muted);'>Running deterministic evidence check (rule_checker.py)...</p>";
 
             const c = casesData.find(x => x.case_id === activeSelectedCaseId);
-            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+            const baseUrl = 'https://netsage-ai-jqur.onrender.com';
 
             try {
                 const res = await fetch(`${baseUrl}/api/cases/${activeSelectedCaseId}/check`, { method: 'POST' });
@@ -1102,7 +1102,7 @@
             panel.style.display = 'block';
             out.innerHTML = "<p style='color:var(--text-muted);'>Executing AI diagnosis engine...</p>";
 
-            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+            const baseUrl = 'https://netsage-ai-jqur.onrender.com';
 
             try {
                 const res = await fetch(`${baseUrl}/api/cases/${activeSelectedCaseId}/ai`, { method: 'POST' });
@@ -1184,7 +1184,7 @@
             const c = casesData.find(x => x.case_id === activeSelectedCaseId);
             resDiv.innerHTML = "<p>Executing evidence check...</p>";
 
-            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+            const baseUrl = 'https://netsage-ai-jqur.onrender.com';
 
             try {
                 const res = await fetch(`${baseUrl}/api/cases/${activeSelectedCaseId}/check`, { method: 'POST' });
@@ -1280,7 +1280,7 @@
                 review_date: date
             };
 
-            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+            const baseUrl = 'https://netsage-ai-jqur.onrender.com';
 
             try {
                 const res = await fetch(`${baseUrl}/api/review`, {
