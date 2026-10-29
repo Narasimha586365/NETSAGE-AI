@@ -914,12 +914,20 @@ def generate_dashboard(mode_banner: str = "SYSTEM ONLINE") -> None:
                     `;
                 }}
             }} catch(e) {{
-                badge.innerText = "Server Offline";
+                console.error("NetSage AI request failed:", e);
+                badge.innerText = "Connection Failed";
                 badge.className = "badge badge-rejected";
                 out.innerHTML = `
                     <div style="background:#FEF2F2; border:1px solid #FCA5A5; padding:12px; border-radius:6px; color:#991B1B;">
-                        <p style="font-weight:700; font-size:13px;">⚠️ Local application server is not running.</p>
-                        <p style="font-size:12px; margin-top:4px;">Start the NetSage-AI local server (<code>python python\\app.py</code>) and open <a href="http://127.0.0.1:8080" target="_blank" style="color:#991B1B; font-weight:700;">http://127.0.0.1:8080</a> in your browser.</p>
+                        <p style="font-weight:700; font-size:13px;">⚠️ Could not connect to the AI service.</p>
+                        <p style="font-size:12px; margin-top:4px;">
+                            Check that the Render backend is running and that its API permits requests from this website.
+                        </p>
+                        <p style="font-size:12px; margin-top:4px;">
+                            <a href="https://netsage-ai-jqur.onrender.com" target="_blank" rel="noopener noreferrer" style="color:#991B1B; font-weight:700;">
+                                Check the Render service
+                            </a>
+                        </p>
                     </div>
                 `;
             }}
